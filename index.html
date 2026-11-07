@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MedObs - Psychiatrie, Neurologie & Appareils</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            medical: {
+              50: '#f0f9ff', 100: '#e0f2fe', 500: '#0284c7', 600: '#0369a1', 700: '#075985', 800: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .touch-btn:active { transform: scale(0.97); opacity: 0.9; }
+  </style>
+</head>
+<body class="h-full font-sans text-slate-800 antialiased flex flex-col justify-between select-none">
+
+  <!-- AUTH SCREEN (ÉCRAN DE CONNEXION) -->
+  <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl space-y-4 text-center">
+      <div class="w-14 h-14 bg-sky-100 rounded-full flex items-center justify-center mx-auto text-medical-600 text-2xl">
+        <i class="fa-solid fa-brain"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">MedObs Access</h2>
+        <p class="text-xs text-slate-500">Connectez-vous pour accéder aux dossiers patients</p>
+      </div>
+
+      <div class="space-y-3 text-left">
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Email</label>
+          <input type="email" id="auth-email" placeholder="votre@email.com" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-medical-500 outline-none">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Mot de passe</label>
+          <input type="password" id="auth-password" placeholder="••••••••" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-medical-500 outline-none">
+        </div>
+      </div>
+
+      <p id="auth-error" class="text-xs text-rose-600 font-semibold hidden"></p>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="handleLogin()" class="flex-1 py-2.5 bg-medical-600 text-white font-bold rounded-xl text-sm shadow hover:bg-medical-700 touch-btn">
+          Se connecter
+        </button>
+        <button onclick="handleSignUp()" class="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-200 touch-btn">
+          Créer un compte
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION CONTAINER (MASQUÉ AVANT CONNEXION) -->
+  <div id="app-container" class="hidden flex-1 flex flex-col justify-between h-full">
+
+    <!-- Application Header -->
+    <header class="bg-medical-700 text-white sticky top-0 z-30 shadow-md">
+      <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-brain text-2xl text-sky-300"></i>
+          <div>
+            <h1 class="font-bold text-lg leading-none">MedObs - Psychiatrie & Neuro</h1>
+            <span class="text-xs text-sky-200">Saisie Modulaire & Assistant IA</span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="switchView('list')" class="px-3 py-1.5 bg-medical-800 hover:bg-medical-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition touch-btn">
+            <i class="fa-solid fa-folder-open text-sky-300"></i>
+            <span>Dossiers (<span id="patient-count">0</span>)</span>
+          </button>
+          <button onclick="handleLogout()" class="p-1.5 text-sky-200 hover:text-white transition" title="Se déconnecter">
+            <i class="fa-solid fa-right-from-bracket text-base"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 pb-24 overflow-y-auto">
+
+      <!-- Toast Notification Box -->
+      <div id="toast" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 transition-all">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-text">Notification</span>
+      </div>
+
+      <!-- VIEW 1: PATIENTS LIST (ACCUEIL) -->
+      <section id="view-list" class="space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="text-base font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-users text-medical-600"></i> Mes Patients Suivis
+          </h2>
+          <div class="flex gap-2">
+            <button onclick="loadDefaultCase()" class="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5 touch-btn">
+              <i class="fa-solid fa-file-medical"></i> Cas 44 ans (Éthylique)
+            </button>
+            <button onclick="startNewPatient()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5 touch-btn">
+              <i class="fa-solid fa-user-plus"></i> Nouveau Patient
+            </button>
+          </div>
+        </div>
+
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+          <input type="text" id="search-patient" placeholder="Rechercher nom, motif..." onkeyup="renderPatientsList()" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-medical-500 shadow-sm">
+        </div>
+
+        <div id="patients-container" class="space-y-3"></div>
+      </section>
+
+      <!-- VIEW 2: FORM & EVOLUTION EDITOR -->
+      <section id="view-form" class="hidden space-y-4">
+        
+        <!-- Header -->
+        <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button onclick="switchView('list')" class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 touch-btn">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+              <h3 id="display-patient-name" class="font-bold text-slate-800 text-base">Nouveau Patient</h3>
+              <span id="display-patient-info" class="text-xs font-medium text-slate-500">Observation Clinique & Sémiologique</span>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="copyObservationForAI()" class="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-xs font-bold flex items-center gap-1.5 touch-btn shadow">
+              <i class="fa-solid fa-robot"></i> 📋 Copier pour l'IA
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex rounded-xl bg-slate-200 p-1 text-xs font-bold text-slate-600">
+          <button id="tab-btn-obs" onclick="switchFormTab('obs')" class="flex-1 py-2 rounded-lg text-center bg-white text-medical-700 shadow">
+            <i class="fa-solid fa-clipboard-list mr-1"></i> Observation Complète
+          </button>
+          <button id="tab-btn-evo" onclick="switchFormTab('evo')" class="flex-1 py-2 rounded-lg text-center hover:text-slate-900">
+            <i class="fa-solid fa-chart-line mr-1"></i> Évolutions (<span id="evo-count">0</span>)
+          </button>
+        </div>
+
+        <!-- TAB CONTENT: OBSERVATION INITIALE -->
+        <div id="tab-content-obs" class="space-y-4">
+          
+          <!-- IDENTITÉ & PRÉSENTATION DU PATIENT -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-id-card"></i> Identité & Présentation du Patient
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div><label class="font-medium text-slate-500">Nom</label><input type="text" id="field-nom" placeholder="Nom" class="w-full p-2 border rounded-lg font-semibold"></div>
+              <div><label class="font-medium text-slate-500">Prénom</label><input type="text" id="field-prenom" placeholder="Prénom" class="w-full p-2 border rounded-lg font-semibold"></div>
+              <div><label class="font-medium text-slate-500">Âge</label><input type="text" id="field-age" placeholder="Âge" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Sexe</label><select id="field-sexe" class="w-full p-2 border rounded-lg"><option value="M">M</option><option value="F">F</option></select></div>
+              <div><label class="font-medium text-slate-500">Fratrie</label><input type="text" id="field-fratrie" placeholder="Fratrie" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Originaire de</label><input type="text" id="field-origine" placeholder="Origine" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">État civil</label><input type="text" id="field-etatcivil" placeholder="Célibataire, marié..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">NSE</label><input type="text" id="field-nse" placeholder="Niveau socio-éco" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Profession</label><input type="text" id="field-profession" placeholder="Profession" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Scolarité</label><input type="text" id="field-scolarite" placeholder="Niveau" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Nationalité</label><input type="text" id="field-nationalite" value="Malagasy" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Religion</label><input type="text" id="field-religion" placeholder="Religion" class="w-full p-2 border rounded-lg"></div>
+            </div>
+            <div class="pt-2">
+              <label class="text-xs font-medium text-slate-500">Motif d'hospitalisation</label>
+              <input type="text" id="field-motif" placeholder="Motif principal..." class="w-full p-2 border rounded-lg text-sm font-semibold">
+            </div>
+          </div>
+
+          <!-- ANTÉCÉDENTS (ATCD) -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-notes-medical"></i> Antécédents (ATCD)
+            </h4>
+            <div class="space-y-3 text-xs">
+              <div class="p-2.5 bg-slate-50 rounded-xl border space-y-2">
+                <span class="font-bold text-slate-700">Médicaux :</span>
+                <input type="text" id="atcd-med-pos" placeholder="Précisions..." class="w-full p-2 border rounded-lg bg-white">
+              </div>
+              <div class="p-2.5 bg-slate-50 rounded-xl border space-y-2">
+                <span class="font-bold text-slate-700">Chirurgicaux :</span>
+                <input type="text" id="atcd-chir-pos" placeholder="Précisions..." class="w-full p-2 border rounded-lg bg-white">
+              </div>
+              <div class="p-2.5 bg-slate-50 rounded-xl border space-y-2">
+                <span class="font-bold text-slate-700">Psychiatriques :</span>
+                <textarea id="atcd-psy-pos" rows="2" placeholder="Précisions..." class="w-full p-2 border rounded-lg bg-white"></textarea>
+              </div>
+              <div class="p-2.5 bg-slate-50 rounded-xl border space-y-2">
+                <span class="font-bold text-slate-700">Habitudes toxiques :</span>
+                <textarea id="atcd-tox-pos" rows="2" placeholder="Précisions..." class="w-full p-2 border rounded-lg bg-white"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- HISTOIRE DE LA MALADIE -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-book-medical"></i> Histoire de la Maladie (HDM)
+            </h4>
+            <textarea id="field-hdm" rows="3" placeholder="Histoire de la maladie..." class="w-full p-2 border rounded-lg text-xs"></textarea>
+          </div>
+
+          <!-- EXAMEN PSYCHIATRIQUE MODULAIRE (OM) -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+                <i class="fa-solid fa-brain"></i> Examen Psychiatrique Initial
+              </h4>
+              <label class="flex items-center gap-1 text-[11px] text-medical-700 bg-slate-50 px-2 py-1 rounded border cursor-pointer font-semibold">
+                <input type="checkbox" onchange="toggleAutoPsyOM(this)"> Remplissage auto
+              </label>
+            </div>
+            
+            <div class="bg-slate-50 p-3 rounded-xl space-y-2 border">
+              <h5 class="text-xs font-bold text-slate-700">A. Présentation / Contact / Comportement</h5>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5 text-xs">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Tenue adaptée"> Tenue adaptée</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Mimique normale"> Mimique normale</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Hypomimie"> Hypomimie</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Contact facile"> Contact facile</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Comportement calme"> Comportement calme</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Agitation psychomotrice"> Agitation</label>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl space-y-2 border">
+              <h5 class="text-xs font-bold text-slate-700">B. Conduites instinctuelles</h5>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5 text-xs">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip" value="Sphincters normaux"> Sphincters normaux</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip" value="Sommeil conservé 8h"> Sommeil conservé (8h)</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip" value="Alimentation normale"> Alimentation normale</label>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl space-y-2 border">
+              <h5 class="text-xs font-bold text-slate-700">C. Fonctions supérieures & Pensée</h5>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5 text-xs">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Langage fluide"> Langage fluide</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Mémoire intacte"> Mémoire intacte</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Cours pensée normal"> Cours pensée normal</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Pas d'hallucination"> Pas d'hallucination</label>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl space-y-2 border">
+              <h5 class="text-xs font-bold text-slate-700">D. Expression des affects & Humeur</h5>
+              <div class="grid grid-cols-2 gap-1.5 text-xs">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-aff-chip" value="Humeur athymique"> Humeur athymique</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-aff-chip" value="Pas d'anxiété"> Pas d'anxiété</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- EXAMEN PHYSIQUE & NEUROLOGIQUE (OM) -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-stethoscope"></i> Examen Physique & Neurologique Initial
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+              <label class="flex items-center gap-1 p-2 bg-slate-50 rounded-lg border cursor-pointer"><input type="checkbox" class="om-phy-chip" value="Bon état général, apyrétique"> Bon état général, apyrétique</label>
+              <label class="flex items-center gap-1 p-2 bg-slate-50 rounded-lg border cursor-pointer"><input type="checkbox" class="om-phy-chip" value="Cardiovascular: B1/B2 réguliers, pas de souffle"> Cardiovasculaire normal</label>
+              <label class="flex items-center gap-1 p-2 bg-slate-50 rounded-lg border cursor-pointer"><input type="checkbox" class="om-phy-chip" value="Pleuropulmonaire: Murmure vésiculaire bien perçu"> Pulmonaire normal</label>
+              <label class="flex items-center gap-1 p-2 bg-slate-50 rounded-lg border cursor-pointer"><input type="checkbox" class="om-phy-chip" value="Abdomen souple, indolore, pas d'organomégalie"> Abdominal normal</label>
+              <label class="flex items-center gap-1 p-2 bg-slate-50 rounded-lg border cursor-pointer"><input type="checkbox" class="om-phy-chip" value="Glasgow 15/15, orienté TSS"> Conscient, GCS 15/15</label>
+              <label class="flex items-center gap-1 p-2 bg-slate-50 rounded-lg border cursor-pointer"><input type="checkbox" class="om-phy-chip" value="Paires crâniennes I à XII intactes"> Paires crâniennes I à XII intactes</label>
+              <label class="flex items-center gap-1 p-2 bg-slate-50 rounded-lg border cursor-pointer"><input type="checkbox" class="om-phy-chip" value="Force 5/5 MRC aux 4 membres, ROT symétriques"> Force 5/5 MRC, ROT normaux</label>
+              <label class="flex items-center gap-1 p-2 bg-slate-50 rounded-lg border cursor-pointer"><input type="checkbox" class="om-phy-chip" value="Aires ganglionnaires libres"> Aires ganglionnaires libres</label>
+            </div>
+          </div>
+
+          <!-- TRAITEMENT & SYNTHÈSE (OM) -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-scale-balanced"></i> Traitement & Synthèse Initiale
+            </h4>
+            <div>
+              <label class="text-xs font-bold text-slate-600 mb-1 block">💊 Traitement initial :</label>
+              <textarea id="field-traitement" rows="3" placeholder="Prescriptions..." class="w-full p-2 border rounded-lg text-xs font-mono"></textarea>
+            </div>
+            <div>
+              <label class="text-xs font-bold text-slate-600 mb-1 block">💡 Synthèse & Conclusion :</label>
+              <textarea id="field-synthese" rows="2" placeholder="Conclusion..." class="w-full p-2 border rounded-lg text-sm"></textarea>
+            </div>
+          </div>
+
+          <button onclick="saveCurrentPatient()" class="w-full py-3.5 bg-medical-600 hover:bg-medical-700 text-white rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 touch-btn">
+            <i class="fa-solid fa-floppy-disk"></i> Enregistrer le Dossier Patient
+          </button>
+
+        </div>
+
+        <!-- TAB CONTENT: ÉVOLUTION JOURNALIÈRE -->
+        <div id="tab-content-evo" class="hidden space-y-4">
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b pb-2">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+                <i class="fa-solid fa-notes-medical"></i> Saisie Évolution Journalière du Patient
+              </h4>
+              <span id="evo-date-display" class="text-xs font-bold text-medical-700 bg-sky-50 px-2 py-1 rounded border border-sky-100">--/--/----</span>
+            </div>
+
+            <!-- 1. RÉSUMÉ SYNDROMIQUE & CONTEXTE DU JOUR -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <h5 class="font-bold text-slate-700"><i class="fa-solid fa-file-contract text-medical-600"></i> 1. Résumé Syndromique du Jour</h5>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div>
+                  <label class="font-medium text-slate-500">Jour d'hospitalisation</label>
+                  <input type="text" id="evo-jour-tag" placeholder="ex: J2 d'hospitalisation" class="w-full p-2 border rounded-lg font-semibold">
+                </div>
+                <div class="col-span-2">
+                  <label class="font-medium text-slate-500">Résumé synthétique / fait marquant du jour</label>
+                  <input type="text" id="evo-resume-text" placeholder="ex: Patient stable, diminution de l'agitation" class="w-full p-2 border rounded-lg">
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. EXAMEN PSYCHIATRIQUE DU JOUR -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
+              <div class="flex items-center justify-between">
+                <h5 class="font-bold text-slate-700"><i class="fa-solid fa-brain text-medical-600"></i> 2. Évolution Examen Psychiatrique du jour</h5>
+                <label class="flex items-center gap-1 text-[11px] text-medical-700 bg-white px-2 py-1 rounded border cursor-pointer font-semibold">
+                  <input type="checkbox" onchange="toggleAutoPsyEvo(this)"> Remplissage auto
+                </label>
+              </div>
+
+              <div class="space-y-2">
+                <span class="font-semibold text-slate-600 block">A. Présentation / Contact / Comportement :</span>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Tenue adaptée"> Tenue adaptée</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Mimique normale"> Mimique normale</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Hypomimie"> Hypomimie</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Contact facile"> Contact facile</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Comportement calme"> Comportement calme</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Pas d'agitation"> Pas d'agitation</label>
+                </div>
+                <textarea id="evo-pres-free" rows="1.5" placeholder="✎ Précisions / Notes libres sur la présentation..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              </div>
+
+              <div class="space-y-2">
+                <span class="font-semibold text-slate-600 block">B. Conduites instinctuelles du jour :</span>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip" value="Sphincters normaux"> Sphincters normaux</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip" value="Sommeil conservé 8h"> Sommeil conservé (8h)</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip" value="Alimentation normale"> Alimentation normale</label>
+                </div>
+                <textarea id="evo-inst-free" rows="1.5" placeholder="✎ Précisions / Notes libres sur les conduites instinctuelles..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              </div>
+
+              <div class="space-y-2">
+                <span class="font-semibold text-slate-600 block">C. Fonctions supérieures & Pensée du jour :</span>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Langage fluide"> Langage fluide</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Mémoire intacte"> Mémoire intacte</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Cours pensée normal"> Cours pensée normal</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Pas d'hallucination"> Pas d'hallucination</label>
+                </div>
+                <textarea id="evo-pens-free" rows="1.5" placeholder="✎ Précisions / Notes libres sur les fonctions supérieures et la pensée..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              </div>
+
+              <div class="space-y-2">
+                <span class="font-semibold text-slate-600 block">D. Affects & Humeur du jour :</span>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-aff-chip" value="Humeur athymique"> Humeur athymique</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-aff-chip" value="Pas d'anxiété"> Pas d'anxiété</label>
+                </div>
+                <textarea id="evo-aff-free" rows="1.5" placeholder="✎ Précisions / Notes libres sur l'humeur..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              </div>
+            </div>
+
+            <!-- 3. EXAMEN PHYSIQUE & NEUROLOGIQUE DU JOUR -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
+              <div class="flex items-center justify-between">
+                <h5 class="font-bold text-slate-700"><i class="fa-solid fa-stethoscope text-medical-600"></i> 3. Évolution Examen Physique & Neurologique du jour</h5>
+                <label class="flex items-center gap-1 text-[11px] text-medical-700 bg-white px-2 py-1 rounded border cursor-pointer font-semibold">
+                  <input type="checkbox" onchange="toggleAutoPhyEvo(this)"> Remplissage auto
+                </label>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Bon état général, apyrétique"> Bon état général, apyrétique</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Cardiovasculaire normal (B1/B2 réguliers)"> Cardiovasculaire normal</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Pulmonaire normal (murmure vésiculaire perçu)"> Pulmonaire normal</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Abdomen souple, indolore, pas d'organomégalie"> Abdomen souple, indolore</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Conscient, Glasgow 15/15, orienté TSS"> Conscient, GCS 15/15</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Paires crâniennes I à XII intactes"> Paires crâniennes I à XII intactes</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Force 5/5 MRC aux 4 membres, ROT normaux"> Force 5/5 MRC, ROT normaux</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Aires ganglionnaires libres"> Aires ganglionnaires libres</label>
+              </div>
+              <textarea id="evo-phy-free" rows="2" placeholder="✎ Précisions / Notes libres sur l'examen physique, neurologique et constantes vitales..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <!-- 4. TRAITEMENT ET CONDUITE À TENIR DU JOUR -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <h5 class="font-bold text-slate-700"><i class="fa-solid fa-scale-balanced text-medical-600"></i> 4. Traitement & Conduite à Tenir (CAT) du jour</h5>
+              <textarea id="evo-cat-text" rows="2" placeholder="ex: Poursuite du traitement en cours, surveillance..." class="w-full p-2 border rounded-lg bg-white"></textarea>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+              <button onclick="addEvolutionEntry()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 touch-btn">
+                <i class="fa-solid fa-plus-circle"></i> Enregistrer l'Évolution
+              </button>
+              <button onclick="copyEvolutionForAI()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 touch-btn">
+                <i class="fa-solid fa-robot"></i> 📋 Copier Évol. pour l'IA
+              </button>
+            </div>
+          </div>
+
+          <div id="evo-history-list" class="space-y-3"></div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <footer class="bg-white border-t border-slate-200 fixed bottom-0 left-0 right-0 z-30">
+      <div class="max-w-4xl mx-auto grid grid-cols-2 p-1.5 gap-1">
+        <button onclick="switchView('list')" id="nav-btn-list" class="py-2 flex flex-col items-center text-medical-600 font-bold text-xs rounded-xl hover:bg-slate-50">
+          <i class="fa-solid fa-list-ul text-base"></i>
+          <span>Patients</span>
+        </button>
+        <button onclick="startNewPatient()" id="nav-btn-new" class="py-2 flex flex-col items-center text-slate-500 font-medium text-xs rounded-xl hover:bg-slate-50">
+          <i class="fa-solid fa-circle-plus text-base"></i>
+          <span>Nouveau Dossier</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- FIREBASE ENGINE SCRIPT -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      setDoc, 
+      deleteDoc, 
+      onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Configuration Firebase du projet pulse-77283
+    const firebaseConfig = {
+      apiKey: "AIzaSyDIFxrQMQyx6B9vVNPe1sTZeS1DMdbXvY",
+      authDomain: "pulse-77283.firebaseapp.com",
+      projectId: "pulse-77283",
+      storageBucket: "pulse-77283.appfirebasestorage.app",
+      messagingSenderId: "5062047853",
+      appId: "1:5062047853:web:86ef44224810d1fd19e764",
+      measurementId: "G-6YQ8GXJS1J"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.auth = auth;
+    window.colRef = collection(db, "patients_medobs");
+    window.patients = [];
+    window.currentPatientId = null;
+
+    // Rendre les fonctions d'Auth et d'UI universellement accessibles
+    window.handleLogin = handleLogin;
+    window.handleSignUp = handleSignUp;
+    window.handleLogout = handleLogout;
+    window.toggleAutoPsyOM = toggleAutoPsyOM;
+    window.toggleAutoPsyEvo = toggleAutoPsyEvo;
+    window.toggleAutoPhyEvo = toggleAutoPhyEvo;
+    window.switchView = switchView;
+    window.switchFormTab = switchFormTab;
+    window.startNewPatient = startNewPatient;
+    window.loadDefaultCase = loadDefaultCase;
+    window.saveCurrentPatient = saveCurrentPatient;
+    window.loadPatientIntoForm = loadPatientIntoForm;
+    window.deletePatient = deletePatient;
+    window.renderPatientsList = renderPatientsList;
+    window.addEvolutionEntry = addEvolutionEntry;
+    window.copyObservationForAI = copyObservationForAI;
+    window.copyEvolutionForAI = copyEvolutionForAI;
+
+    let unsubscribeSnapshot = null;
+
+    // Écouteur d'état d'authentification
+    onAuthStateChanged(auth, (user) => {
+      const authScreen = document.getElementById('auth-screen');
+      const appContainer = document.getElementById('app-container');
+
+      if (user) {
+        authScreen.classList.add('hidden');
+        appContainer.classList.remove('hidden');
+        showToast(`Bienvenue, ${user.email.split('@')[0]}`);
+
+        // Écouteur en temps réel Firestore une fois connecté
+        if (!unsubscribeSnapshot) {
+          unsubscribeSnapshot = onSnapshot(window.colRef, (snapshot) => {
+            window.patients = [];
+            snapshot.forEach((docSnap) => {
+              window.patients.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            updatePatientCount();
+            renderPatientsList();
+          });
+        }
+      } else {
+        if (unsubscribeSnapshot) {
+          unsubscribeSnapshot();
+          unsubscribeSnapshot = null;
+        }
+        appContainer.classList.add('hidden');
+        authScreen.classList.remove('hidden');
+      }
+    });
+
+    async function handleLogin() {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const errorEl = document.getElementById('auth-error');
+      errorEl.classList.add('hidden');
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        errorEl.innerText = "Erreur de connexion : Vérifiez vos identifiants";
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    async function handleSignUp() {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const errorEl = document.getElementById('auth-error');
+      errorEl.classList.add('hidden');
+
+      if (password.length < 6) {
+        errorEl.innerText = "Le mot de passe doit contenir au moins 6 caractères";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        errorEl.innerText = "Erreur de création : Email déjà utilisé ou invalide";
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    async function handleLogout() {
+      await signOut(auth);
+    }
+
+    const evoDateEl = document.getElementById('evo-date-display');
+    if (evoDateEl) {
+      evoDateEl.innerText = new Date().toLocaleDateString('fr-FR');
+    }
+
+    function toggleAutoPsyOM(checkbox) {
+      document.querySelectorAll('.om-pres-chip, .om-inst-chip, .om-pens-chip, .om-aff-chip').forEach(cb => cb.checked = checkbox.checked);
+    }
+
+    function toggleAutoPsyEvo(checkbox) {
+      document.querySelectorAll('.evo-pres-chip, .evo-inst-chip, .evo-pens-chip, .evo-aff-chip').forEach(cb => cb.checked = checkbox.checked);
+    }
+
+    function toggleAutoPhyEvo(checkbox) {
+      document.querySelectorAll('.evo-phy-chip').forEach(cb => cb.checked = checkbox.checked);
+    }
+
+    function switchView(viewName) {
+      const viewList = document.getElementById('view-list');
+      const viewForm = document.getElementById('view-form');
+      const navList = document.getElementById('nav-btn-list');
+      const navNew = document.getElementById('nav-btn-new');
+
+      if (viewName === 'list') {
+        viewList.classList.remove('hidden');
+        viewForm.classList.add('hidden');
+        navList.className = "py-2 flex flex-col items-center text-medical-600 font-bold text-xs rounded-xl hover:bg-slate-50";
+        navNew.className = "py-2 flex flex-col items-center text-slate-500 font-medium text-xs rounded-xl hover:bg-slate-50";
+      } else {
+        viewList.classList.add('hidden');
+        viewForm.classList.remove('hidden');
+        navList.className = "py-2 flex flex-col items-center text-slate-500 font-medium text-xs rounded-xl hover:bg-slate-50";
+        navNew.className = "py-2 flex flex-col items-center text-medical-600 font-bold text-xs rounded-xl hover:bg-slate-50";
+      }
+    }
+
+    function switchFormTab(tab) {
+      const tabObs = document.getElementById('tab-content-obs');
+      const tabEvo = document.getElementById('tab-content-evo');
+      const btnObs = document.getElementById('tab-btn-obs');
+      const btnEvo = document.getElementById('tab-btn-evo');
+
+      if (tab === 'obs') {
+        tabObs.classList.remove('hidden');
+        tabEvo.classList.add('hidden');
+        btnObs.className = "flex-1 py-2 rounded-lg text-center bg-white text-medical-700 font-bold shadow";
+        btnEvo.className = "flex-1 py-2 rounded-lg text-center text-slate-600 hover:text-slate-900 font-semibold";
+      } else {
+        tabObs.classList.add('hidden');
+        tabEvo.classList.remove('hidden');
+        btnEvo.className = "flex-1 py-2 rounded-lg text-center bg-white text-medical-700 font-bold shadow";
+        btnObs.className = "flex-1 py-2 rounded-lg text-center text-slate-600 hover:text-slate-900 font-semibold";
+      }
+    }
+
+    function startNewPatient() {
+      window.currentPatientId = 'patient_' + Date.now();
+      document.querySelectorAll('#view-form input, #view-form textarea').forEach(el => {
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = '';
+      });
+      document.getElementById('field-sexe').value = 'M';
+      document.getElementById('field-nationalite').value = 'Malagasy';
+      updateFormHeader("Nouveau Patient", "Observation Clinique & Sémiologique");
+      renderEvolutionsList([]);
+      switchView('form');
+      switchFormTab('obs');
+    }
+
+    async function loadDefaultCase() {
+      const defaultId = 'patient_default_v18';
+      window.currentPatientId = defaultId;
+      const defaultData = {
+        nom: "R.", prenom: "Patient", age: "44", sexe: "M", etatcivil: "Célibataire", profession: "Chômeur", nationalite: "Malagasy",
+        motif: "Trouble du comportement à type d'agitation psychomoteur",
+        traitement: "Bevitine 250 1-1-1\nDiazepam 0-0-2",
+        updatedAt: new Date().toISOString(),
+        evolutions: []
+      };
+
+      try {
+        await setDoc(doc(db, "patients_medobs", defaultId), defaultData, { merge: true });
+        loadPatientIntoForm(defaultId);
+        showToast("Cas test chargé sur le cloud !");
+      } catch (e) {
+        console.error(e);
+        showToast("Erreur lors de l'envoi du cas test");
+      }
+    }
+
+    function getCheckedValues(className) {
+      return Array.from(document.querySelectorAll('.' + className + ':checked')).map(cb => cb.value);
+    }
+
+    async function saveCurrentPatient() {
+      const nom = document.getElementById('field-nom').value.trim();
+      if (!nom) { showToast("Veuillez renseigner au moins le Nom."); return; }
+
+      const pId = window.currentPatientId || ('patient_' + Date.now());
+      const existingPatient = window.patients.find(p => p.id === pId);
+
+      const patientData = {
+        nom: nom,
+        prenom: document.getElementById('field-prenom').value,
+        age: document.getElementById('field-age').value,
+        sexe: document.getElementById('field-sexe').value,
+        fratrie: document.getElementById('field-fratrie').value,
+        origine: document.getElementById('field-origine').value,
+        etatcivil: document.getElementById('field-etatcivil').value,
+        nse: document.getElementById('field-nse').value,
+        profession: document.getElementById('field-profession').value,
+        scolarite: document.getElementById('field-scolarite').value,
+        nationalite: document.getElementById('field-nationalite').value,
+        religion: document.getElementById('field-religion').value,
+        motif: document.getElementById('field-motif').value,
+        atcd_med: document.getElementById('atcd-med-pos').value,
+        atcd_chir: document.getElementById('atcd-chir-pos').value,
+        atcd_psy: document.getElementById('atcd-psy-pos').value,
+        atcd_tox: document.getElementById('atcd-tox-pos').value,
+        hdm: document.getElementById('field-hdm').value,
+        traitement: document.getElementById('field-traitement').value,
+        synthese: document.getElementById('field-synthese').value,
+        updatedAt: new Date().toISOString(),
+        evolutions: existingPatient ? (existingPatient.evolutions || []) : []
+      };
+
+      try {
+        await setDoc(doc(db, "patients_medobs", pId), patientData, { merge: true });
+        showToast("Dossier enregistré sur le cloud !");
+        switchView('list');
+      } catch (error) {
+        console.error("Erreur enregistrement : ", error);
+        showToast("Erreur d'enregistrement Cloud");
+      }
+    }
+
+    function loadPatientIntoForm(patientId) {
+      const p = window.patients.find(p => p.id === patientId);
+      if (!p) return;
+      window.currentPatientId = p.id;
+
+      document.getElementById('field-nom').value = p.nom || '';
+      document.getElementById('field-prenom').value = p.prenom || '';
+      document.getElementById('field-age').value = p.age || '';
+      document.getElementById('field-sexe').value = p.sexe || 'M';
+      document.getElementById('field-fratrie').value = p.fratrie || '';
+      document.getElementById('field-origine').value = p.origine || '';
+      document.getElementById('field-etatcivil').value = p.etatcivil || '';
+      document.getElementById('field-nse').value = p.nse || '';
+      document.getElementById('field-profession').value = p.profession || '';
+      document.getElementById('field-scolarite').value = p.scolarite || '';
+      document.getElementById('field-nationalite').value = p.nationalite || 'Malagasy';
+      document.getElementById('field-religion').value = p.religion || '';
+      document.getElementById('field-motif').value = p.motif || '';
+      document.getElementById('atcd-med-pos').value = p.atcd_med || '';
+      document.getElementById('atcd-chir-pos').value = p.atcd_chir || '';
+      document.getElementById('atcd-psy-pos').value = p.atcd_psy || '';
+      document.getElementById('atcd-tox-pos').value = p.atcd_tox || '';
+      document.getElementById('field-hdm').value = p.hdm || '';
+      document.getElementById('field-traitement').value = p.traitement || '';
+      document.getElementById('field-synthese').value = p.synthese || '';
+
+      updateFormHeader(`${p.nom} ${p.prenom || ''}`, `${p.age || '?'} ans - ${p.motif || ''}`);
+      renderEvolutionsList(p.evolutions || []);
+      switchView('form');
+      switchFormTab('obs');
+    }
+
+    async function deletePatient(patientId, event) {
+      event.stopPropagation();
+      if (confirm("Supprimer ce dossier ?")) {
+        try {
+          await deleteDoc(doc(db, "patients_medobs", patientId));
+          showToast("Dossier supprimé");
+        } catch (error) {
+          console.error("Erreur suppression : ", error);
+        }
+      }
+    }
+
+    function updateFormHeader(title, subtitle) {
+      document.getElementById('display-patient-name').innerText = title;
+      document.getElementById('display-patient-info').innerText = subtitle;
+    }
+
+    function updatePatientCount() {
+      document.getElementById('patient-count').innerText = window.patients.length;
+    }
+
+    function renderPatientsList() {
+      const container = document.getElementById('patients-container');
+      const searchQuery = (document.getElementById('search-patient')?.value || '').toLowerCase();
+      const filtered = window.patients.filter(p => (p.nom && p.nom.toLowerCase().includes(searchQuery)));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 bg-white rounded-2xl border border-dashed p-6"><p class="text-sm font-semibold text-slate-500">Aucun patient</p></div>`;
+        return;
+      }
+      container.innerHTML = filtered.map(p => `
+        <div onclick="loadPatientIntoForm('${p.id}')" class="bg-white p-3.5 rounded-2xl border shadow-sm hover:border-sky-400 transition cursor-pointer flex items-center justify-between touch-btn">
+          <div>
+            <h4 class="font-bold text-slate-800 text-sm">${p.nom} ${p.prenom || ''} (${p.age || '?'} ans)</h4>
+            <p class="text-xs text-slate-600 line-clamp-1">${p.motif || ''}</p>
+          </div>
+          <button onclick="deletePatient('${p.id}', event)" class="p-2 text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash-can text-sm"></i></button>
+        </div>
+      `).join('');
+    }
+
+    async function addEvolutionEntry() {
+      if (!window.currentPatientId) return;
+      const p = window.patients.find(p => p.id === window.currentPatientId);
+      if (!p) return;
+
+      const evoData = {
+        date: new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}),
+        jour: document.getElementById('evo-jour-tag').value.trim() || "Évolution journalière",
+        resume: document.getElementById('evo-resume-text').value.trim(),
+        psy_chips: [...getCheckedValues('evo-pres-chip'), ...getCheckedValues('evo-inst-chip'), ...getCheckedValues('evo-pens-chip'), ...getCheckedValues('evo-aff-chip')],
+        psy_free: `${document.getElementById('evo-pres-free').value} ${document.getElementById('evo-inst-free').value} ${document.getElementById('evo-pens-free').value} ${document.getElementById('evo-aff-free').value}`.trim(),
+        phy_chips: getCheckedValues('evo-phy-chip'),
+        phy_free: document.getElementById('evo-phy-free').value.trim(),
+        cat: document.getElementById('evo-cat-text').value.trim()
+      };
+
+      const updatedEvolutions = [evoData, ...(p.evolutions || [])];
+
+      try {
+        await setDoc(doc(db, "patients_medobs", window.currentPatientId), { evolutions: updatedEvolutions }, { merge: true });
+        showToast("Évolution enregistrée !");
+        renderEvolutionsList(updatedEvolutions);
+      } catch (error) {
+        console.error("Erreur enregistrement évolution :", error);
+      }
+    }
+
+    function renderEvolutionsList(evos) {
+      document.getElementById('evo-count').innerText = evos ? evos.length : 0;
+      const container = document.getElementById('evo-history-list');
+      if (!evos || evos.length === 0) {
+        container.innerHTML = `<div class="text-center py-4 text-xs text-slate-400 bg-white rounded-xl border">Aucune évolution enregistrée</div>`;
+        return;
+      }
+      container.innerHTML = evos.map(e => `
+        <div class="bg-white p-3 rounded-xl border space-y-1 text-xs">
+          <div class="font-bold text-medical-700">${e.jour} - ${e.date}</div>
+          ${e.resume ? `<p><strong>Résumé :</strong> ${e.resume}</p>` : ''}
+          ${e.psy_chips && e.psy_chips.length > 0 ? `<p><strong>Psy (coché) :</strong> ${e.psy_chips.join(', ')}</p>` : ''}
+          ${e.psy_free ? `<p><strong>Psy (notes) :</strong> ${e.psy_free}</p>` : ''}
+          ${e.phy_chips && e.phy_chips.length > 0 ? `<p><strong>Physique (coché) :</strong> ${e.phy_chips.join(', ')}</p>` : ''}
+          ${e.phy_free ? `<p><strong>Physique (notes) :</strong> ${e.phy_free}</p>` : ''}
+          ${e.cat ? `<p><strong>CAT :</strong> ${e.cat}</p>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function copyObservationForAI() {
+      const data = {
+        nom: document.getElementById('field-nom').value,
+        prenom: document.getElementById('field-prenom').value,
+        age: document.getElementById('field-age').value,
+        sexe: document.getElementById('field-sexe').value,
+        motif: document.getElementById('field-motif').value,
+        hdm: document.getElementById('field-hdm').value,
+        psy_chips: [...getCheckedValues('om-pres-chip'), ...getCheckedValues('om-inst-chip'), ...getCheckedValues('om-pens-chip'), ...getCheckedValues('om-aff-chip')],
+        phy_chips: getCheckedValues('om-phy-chip'),
+        traitement: document.getElementById('field-traitement').value,
+        synthese: document.getElementById('field-synthese').value
+      };
+      const promptText = `Rédige l'observation clinique complète (OM) de ce patient selon les standards universitaires. N'invente aucun symptôme.\n\n` + JSON.stringify(data, null, 2);
+      navigator.clipboard.writeText(promptText).then(() => showToast("📋 OM copiée !"));
+    }
+
+    function copyEvolutionForAI() {
+      const p = window.patients.find(p => p.id === window.currentPatientId);
+      const patientContext = p ? {
+        nom: p.nom,
+        prenom: p.prenom,
+        age: p.age,
+        sexe: p.sexe,
+        motif: p.motif,
+        traitement_initial: p.traitement
+      } : {};
+
+      const evoData = {
+        contexte_patient: patientContext,
+        jour_hospitalisation: document.getElementById('evo-jour-tag').value,
+        resume_syndromique: document.getElementById('evo-resume-text').value,
+        examen_psychiatrique_jour: {
+          elements_cochés: [...getCheckedValues('evo-pres-chip'), ...getCheckedValues('evo-inst-chip'), ...getCheckedValues('evo-pens-chip'), ...getCheckedValues('evo-aff-chip')],
+          notes_presentation: document.getElementById('evo-pres-free').value,
+          notes_conduites_instinctuelles: document.getElementById('evo-inst-free').value,
+          notes_fonctions_superieures: document.getElementById('evo-pens-free').value,
+          notes_affects_humeur: document.getElementById('evo-aff-free').value
+        },
+        examen_physique_neurologique_jour: {
+          elements_cochés: getCheckedValues('evo-phy-chip'),
+          notes_libres_physique_neuro: document.getElementById('evo-phy-free').value
+        },
+        traitement_et_cat_jour: document.getElementById('evo-cat-text').value
+      };
+
+      const promptText = `Rédige l'évolution journalière médicale de ce patient hospitalisé. 
+REQUIS DE STRUCTURE STRICTE :
+1. Résumé syndromique (Jour d'hospitalisation et état clinique global du jour)
+2. Évolution de l'Examen Psychiatrique (Sémiologie complète intégrant les éléments cochés et les notes de chaque sous-section : Présentation, Conduites instinctuelles, Fonctions supérieures/Pensée, Affects/Humeur)
+3. Évolution de l'Examen Physique et Neurologique (État général, Constantes, Appareils, Glasgow 15/15, Paires crâniennes I-XII, Force MRC 5/5, ROT, absence de syndrome méningé, appuyé par les notes libres)
+4. Traitement et Conduite à Tenir (CAT)
+
+N'invente aucun symptôme non mentionné. Utilise un style clinique, sobre et professionnel.
+
+Données d'évolution brutes :
+` + JSON.stringify(evoData, null, 2);
+
+      navigator.clipboard.writeText(promptText).then(() => {
+        showToast("📋 Évolution copiée ! Collez-la directement dans le chat.");
+      }).catch(() => alert("Erreur lors de la copie"));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      document.getElementById('toast-text').innerText = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 2500);
+    }
+  </script>
+</body>
+</html>
