@@ -470,15 +470,16 @@
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // Configuration Firebase du projet pulse-77283
-    const firebaseConfig = {
-      apiKey: "AIzaSyDIFxrQMQyx6B9vVNPe1sTZeS1DMdbXvY",
-      authDomain: "pulse-77283.firebaseapp.com",
-      projectId: "pulse-77283",
-      storageBucket: "pulse-77283.appfirebasestorage.app",
-      messagingSenderId: "5062047853",
-      appId: "1:5062047853:web:86ef44224810d1fd19e764",
-      measurementId: "G-6YQ8GXJS1J"
-    };
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDIFxrQMQyx6sB9vvNPe1sTZeS1DMdbXvY",
+  authDomain: "pulse-77283.firebaseapp.com",
+  projectId: "pulse-77283",
+  storageBucket: "pulse-77283.firebasestorage.app",
+  messagingSenderId: "5062047853",
+  appId: "1:5062047853:web:1f2a8887f9fbf14619e764",
+  measurementId: "G-44W7SKHX93"
+};
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
