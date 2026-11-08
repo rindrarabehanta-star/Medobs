@@ -450,10 +450,10 @@
               </h4>
               <div class="flex gap-2">
                 <button onclick="generateObservationText()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow touch-btn flex items-center gap-1.5">
-                  <i class="fa-solid fa-bolt"></i> Générer Localement
+                  <i class="fa-solid fa-bolt"></i> Local
                 </button>
                 <button onclick="generateObservationWithAI()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow touch-btn flex items-center gap-1.5">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 Générer par IA
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 IA
                 </button>
                 <button onclick="exportToWordDocx()" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow touch-btn flex items-center gap-1.5">
                   <i class="fa-solid fa-file-word"></i> Word
@@ -461,7 +461,7 @@
               </div>
             </div>
             <p class="text-[11px] text-slate-500">Ce champ assemble tout le dossier. Vous pouvez l'actualiser localement ou via l'API Gemini.</p>
-            <textarea id="field-obs-medicale" rows="12" placeholder="Cliquez sur 'Générer par IA' ou 'Générer Localement'..." class="w-full p-3 border border-indigo-200 rounded-xl bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/25 font-mono leading-relaxed"></textarea>
+            <textarea id="field-obs-medicale" rows="12" placeholder="Cliquez sur '🤖 IA' ou 'Local'..." class="w-full p-3 border border-indigo-200 rounded-xl bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/25 font-mono leading-relaxed"></textarea>
           </div>
 
           <button onclick="saveCurrentPatient()" class="w-full py-3.5 bg-medical-600 hover:bg-medical-700 text-white rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 touch-btn">
@@ -946,7 +946,6 @@ ${traitement}`;
 
       showToast("Génération de l'observation complète par l'IA en cours...");
 
-      // Collecter toutes les données brutes saisies par l'étudiant
       const formData = {
         nom: document.getElementById('field-nom').value,
         prenom: document.getElementById('field-prenom').value,
@@ -954,12 +953,6 @@ ${traitement}`;
         sexe: document.getElementById('field-sexe').value,
         etatcivil: document.getElementById('field-etatcivil').value,
         profession: document.getElementById('field-profession').value,
-        nse: document.getElementById('field-nse').value,
-        scolarite: document.getElementById('field-scolarite').value,
-        religion: document.getElementById('field-religion').value,
-        fratrie: document.getElementById('field-fratrie').value,
-        origine: document.getElementById('field-origine').value,
-        nationalite: document.getElementById('field-nationalite').value,
         motif: document.getElementById('field-motif').value,
         biographie: document.getElementById('field-biographie').value,
         hdmBrut: document.getElementById('field-hdm').value,
@@ -1004,13 +997,13 @@ Fournis uniquement le texte final de l'observation médicale mise en forme, sans
         if (data.candidates && data.candidates[0].content.parts[0].text) {
           const aiText = data.candidates[0].content.parts[0].text;
           document.getElementById('field-obs-medicale').value = aiText;
-          showToast("Observation complète générée par l'IA avec succès !");
+          showToast("Observation complète générée par l'IA !");
         } else {
           throw new Error("Réponse invalide de l'API Gemini.");
         }
       } catch (err) {
         console.error(err);
-        alert("Erreur lors de l'appel à l'API Gemini : " + err.message + "\nBasculement sur la génération locale.");
+        alert("Erreur réseau ou clé API invalide. Basculement sur la génération locale.");
         generateObservationText();
       }
     }
@@ -1140,7 +1133,7 @@ Fournis uniquement le texte final de l'observation médicale mise en forme, sans
       localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
       updatePatientCount();
       renderPatientsList();
-      showToast("Dossier enregistré localement et sur Firebase !");
+      showToast("Dossier enregistré !");
       switchView('list');
 
       if (db && window.colRef) {
@@ -1177,7 +1170,7 @@ Fournis uniquement le texte final de l'observation médicale mise en forme, sans
 
     async function deletePatient(patientId, event) {
       event.stopPropagation();
-      if (confirm("Supprimer ce dossier de Firebase et de l'appareil ?")) {
+      if (confirm("Supprimer ce dossier ?")) {
         try {
           if (db) await deleteDoc(doc(db, "patients_medobs", patientId));
         } catch(e) {}
@@ -1290,7 +1283,7 @@ Fournis uniquement le texte final de l'observation médicale mise en forme, sans
     function copyObservationForAI() {
       generateObservationText();
       const obsVal = document.getElementById('field-obs-medicale').value;
-      navigator.clipboard.writeText(obsVal).then(() => showToast("📋 Observation copiée pour l'IA !"));
+      navigator.clipboard.writeText(obsVal).then(() => showToast("📋 Observation copiée !"));
     }
 
     function copyEvolutionForAI() {
@@ -1321,8 +1314,12 @@ Fournis uniquement le texte final de l'observation médicale mise en forme, sans
       const t = document.getElementById('toast');
       if (!t) return;
       document.getElementById('toast-text').innerText = msg;
+      t.classList.add('flex');
       t.classList.remove('hidden');
-      setTimeout(() => t.classList.add('hidden'), 2500);
+      setTimeout(() => {
+        t.classList.remove('flex');
+        t.classList.add('hidden');
+      }, 2500);
     }
   </script>
 </body>
