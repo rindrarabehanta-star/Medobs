@@ -44,7 +44,7 @@
 </head>
 <body class="h-full font-sans text-slate-800 antialiased flex flex-col justify-between select-none relative">
 
-  <!-- AUTH SCREEN (Caché par défaut pour permettre l'accès direct à l'application) -->
+  <!-- AUTH SCREEN -->
   <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl space-y-4 text-center">
       <div class="w-14 h-14 bg-sky-100 rounded-full flex items-center justify-center mx-auto text-medical-600 text-2xl">
@@ -76,14 +76,13 @@
           Créer un compte
         </button>
       </div>
-      
       <button onclick="bypassAuth()" class="w-full py-2 text-xs font-semibold text-slate-400 hover:text-slate-600 underline">
-        Continuer sans connexion (Mode hors-ligne / Démo)
+        Continuer en mode local / hors-ligne
       </button>
     </div>
   </div>
 
-  <!-- APPLICATION CONTAINER (Affiché directement) -->
+  <!-- APPLICATION CONTAINER -->
   <div id="app-container" class="flex-1 flex flex-col justify-between h-full">
 
     <!-- Application Header -->
@@ -142,7 +141,7 @@
         <div id="patients-container" class="space-y-3"></div>
       </section>
 
-      <!-- VIEW 2: FORM, EVOLUTION & 3RD TAB (FICHE DE PRÉSENTATION) -->
+      <!-- VIEW 2: FORM, EVOLUTION & 3RD TAB -->
       <section id="view-form" class="hidden space-y-4">
         
         <!-- Header -->
@@ -202,13 +201,12 @@
             </div>
           </div>
 
-          <!-- ANTÉCÉDENTS (ATCD) INTERACTIFS COMPLETS -->
+          <!-- ANTÉCÉDENTS (ATCD) INTERACTIFS -->
           <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
             <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
               <i class="fa-solid fa-notes-medical"></i> Antécédents (ATCD) Interactifs
             </h4>
 
-            <!-- A. Toxiques -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
               <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-wine-glass-drop text-amber-600"></i> A. Habitudes Toxiques :</span>
               <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
@@ -236,7 +234,6 @@
               <textarea id="atcd-tox-free" rows="1.5" placeholder="✎ Précisions toxiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
-            <!-- B. Psychiatriques -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
               <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-brain text-indigo-600"></i> B. Antécédents Psychiatriques :</span>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
@@ -247,7 +244,6 @@
               <textarea id="atcd-psy-free" rows="2" placeholder="✎ Précisions psychiatriques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
-            <!-- C. Médicaux -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
               <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-heart-pulse text-rose-600"></i> C. Antécédents Médicaux :</span>
               <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5">
@@ -259,13 +255,12 @@
             </div>
           </div>
 
-          <!-- HISTOIRE DE LA MALADIE (HDM) AVEC BULLES DE SAISIE RAPIDE -->
+          <!-- HISTOIRE DE LA MALADIE (HDM) AVEC SAISIE RAPIDE -->
           <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
             <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
               <i class="fa-solid fa-wand-magic-sparkles"></i> Histoire de la Maladie (HdM) - Saisie Rapide
             </h4>
 
-            <!-- Bulles / Chips d'insertion rapide -->
             <div class="tags-group flex flex-wrap gap-1.5 items-center">
               <span class="tag-title text-xs font-bold text-slate-500 w-full">Sommeil & Comportement :</span>
               <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Insomnie d\'endormissement')">+ Insomnie d'endormissement</button>
@@ -281,7 +276,21 @@
               <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Aucun traitement reçu au préalable')">+ Aucun traitement reçu</button>
             </div>
 
-            <textarea id="field-hdm" rows="5" placeholder="Tapez les dates ou d'autres observations brutes ici..." class="w-full p-2.5 border rounded-xl bg-slate-50 text-xs mt-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
+            <textarea id="field-hdm" rows="4" placeholder="Tapez les notes brutes de l'HdM ici..." class="w-full p-2.5 border rounded-xl bg-slate-50 text-xs mt-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
+          </div>
+
+          <!-- NOUVEAU CHAMP : OBSERVATION MÉDICALE GÉNÉRÉE ET AFFINÉE -->
+          <div class="bg-indigo-50/60 p-3.5 rounded-2xl shadow-sm border border-indigo-100 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-file-pen"></i> Observation Médicale (Générée & Affinée)
+              </h4>
+              <button onclick="generateObservationText()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Générer / Actualiser
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-500">Champ textuel pour synthétiser, rédiger et affiner pas à pas l'observation médicale globale du patient.</p>
+            <textarea id="field-obs-medicale" rows="5" placeholder="L'observation médicale générée ou rédigée s'affichera ici pour affinage..." class="w-full p-3 border border-indigo-200 rounded-xl bg-white text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono"></textarea>
           </div>
 
           <!-- EXAMEN PSYCHIATRIQUE INITIAL (OM) -->
@@ -337,7 +346,7 @@
             </div>
           </div>
 
-          <!-- EXAMEN PHYSIQUE & NEUROLOGIQUE INITIAL COMPLET -->
+          <!-- EXAMEN PHYSIQUE & NEUROLOGIQUE INITIAL -->
           <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
             <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
               <i class="fa-solid fa-stethoscope"></i> Examen Physique & Neurologique Initial Complet
@@ -346,7 +355,7 @@
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <span class="font-bold text-slate-700 block"><i class="fa-solid fa-brain text-medical-600"></i> 1. Examen Neurologique :</span>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Consciente, GCS 15/15 (E4 V5 M6)"> Conscient, GCS 15/15</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Consciente, GCS 15/15"> Conscient, GCS 15/15</label>
                 <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Paires crâniennes I à XII intactes"> Paires crâniennes I à XII intactes</label>
                 <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Force musculaire 5/5 MRC aux 4 membres"> Force 5/5 MRC aux 4 membres</label>
                 <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="ROT normaux et symétriques"> ROT normaux et symétriques</label>
@@ -388,7 +397,7 @@
 
           </div>
 
-          <!-- TRAITEMENT & SYNTHÈSE (OM) -->
+          <!-- TRAITEMENT & SYNTHÈSE -->
           <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
             <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
               <i class="fa-solid fa-scale-balanced"></i> Traitement & Synthèse Initiale
@@ -415,7 +424,6 @@
               <span id="evo-date-display" class="text-xs font-bold text-medical-700 bg-sky-50 px-2 py-1 rounded border border-sky-100">--/--/----</span>
             </div>
 
-            <!-- 1. RÉSUMÉ SYNDROMIQUE -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <h5 class="font-bold text-slate-700"><i class="fa-solid fa-file-contract text-medical-600"></i> 1. Résumé Syndromique du Jour</h5>
               <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -430,7 +438,6 @@
               </div>
             </div>
 
-            <!-- 2. EXAMEN PSYCHIATRIQUE DU JOUR -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
               <div class="flex items-center justify-between">
                 <h5 class="font-bold text-slate-700"><i class="fa-solid fa-brain text-medical-600"></i> 2. Examen Psychiatrique du Jour</h5>
@@ -481,7 +488,6 @@
               </div>
             </div>
 
-            <!-- 3. EXAMEN PHYSIQUE & NEUROLOGIQUE DU JOUR -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
               <div class="flex items-center justify-between">
                 <h5 class="font-bold text-slate-700"><i class="fa-solid fa-stethoscope text-medical-600"></i> 3. Examen Physique & Neurologique du Jour</h5>
@@ -502,10 +508,20 @@
               <textarea id="evo-phy-free" rows="1.5" placeholder="✎ Précisions examens physiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
-            <!-- 4. TRAITEMENT ET CAT -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <h5 class="font-bold text-slate-700"><i class="fa-solid fa-scale-balanced text-medical-600"></i> 4. Traitement & Conduite à Tenir (CAT) du jour</h5>
               <textarea id="evo-cat-text" rows="2" placeholder="ex: Poursuite du traitement..." class="w-full p-2 border rounded-lg bg-white"></textarea>
+            </div>
+
+            <!-- NOUVEAU CHAMP : PRÉSENTATION DE L'ÉVOLUTION -->
+            <div class="p-3 bg-sky-50/60 rounded-xl border border-sky-100 space-y-2 text-xs">
+              <div class="flex items-center justify-between">
+                <h5 class="font-bold text-sky-800"><i class="fa-solid fa-pen-nib text-sky-600"></i> 5. Présentation de l'Évolution (Rédigée & Affinée)</h5>
+                <button onclick="generateEvolutionText()" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
+                  Générer / Actualiser
+                </button>
+              </div>
+              <textarea id="evo-presentation-text" rows="3" placeholder="Texte synthétique et rédigé de l'évolution du jour (modifiable pour affinage)..." class="w-full p-2.5 border border-sky-200 rounded-xl bg-white font-mono text-xs"></textarea>
             </div>
 
             <div class="flex gap-2 pt-2">
@@ -521,10 +537,9 @@
           <div id="evo-history-list" class="space-y-3"></div>
         </div>
 
-        <!-- TAB 3: FICHE DE PRÉSENTATION (STAFF / TOURNÉE) -->
+        <!-- TAB 3: FICHE DE PRÉSENTATION -->
         <div id="tab-content-fiche" class="hidden space-y-4">
           <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-6 text-sm leading-relaxed">
-            
             <div class="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 class="font-bold text-medical-700 text-base flex items-center gap-2">
@@ -533,14 +548,12 @@
                 <p class="text-xs text-slate-500">Modèle quotidien formalisé prêt pour la tournée des lits</p>
               </div>
               <button onclick="generateStaffReport()" class="px-3 py-1.5 bg-sky-600 text-white rounded-xl text-xs font-bold hover:bg-sky-700 shadow touch-btn">
-                <i class="fa-solid fa-rotate"></i> Actualiser l'Évolution
+                <i class="fa-solid fa-rotate"></i> Actualiser la Fiche
               </button>
             </div>
-
             <div id="staff-report-output" class="space-y-4 text-xs text-slate-700 font-normal">
-              <p class="text-slate-400 italic text-center py-6">Cliquez sur "Actualiser l'Évolution" pour afficher la présentation rédigée du patient.</p>
+              <p class="text-slate-400 italic text-center py-6">Cliquez sur "Actualiser la Fiche" pour afficher la présentation rédigée du patient.</p>
             </div>
-
           </div>
         </div>
 
@@ -571,8 +584,6 @@
 
   <!-- TIROIR BRAINSTORMING IA -->
   <div id="messenger-window" class="hidden fixed bottom-16 right-2 sm:right-6 z-50 w-[94vw] sm:w-[420px] h-[540px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden transition-all">
-    
-    <!-- Header Messenger -->
     <div class="bg-gradient-to-r from-indigo-700 to-medical-700 p-3.5 text-white flex items-center justify-between shadow-md">
       <div class="flex items-center gap-2.5">
         <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sky-200 text-lg">
@@ -590,35 +601,31 @@
       </button>
     </div>
 
-    <!-- Zone des Messages -->
     <div id="chat-messages" class="flex-1 p-3 overflow-y-auto space-y-3 bg-slate-50 text-xs">
       <div class="flex items-start gap-2">
         <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">IA</div>
         <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 text-slate-700 max-w-[85%] leading-relaxed space-y-1">
           <p class="font-semibold text-indigo-700">Bonjour Docteur ! 👋</p>
-          <p>Prêt à rédiger l'Histoire de la Maladie et les évolutions selon vos consignes strictes.</p>
+          <p>Prêt à rédiger l'Histoire de la Maladie et les observations selon vos consignes strictes.</p>
         </div>
       </div>
     </div>
 
-    <!-- Quick Prompt Chips -->
     <div class="p-2 bg-white border-t border-slate-100 flex gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
       <button onclick="sendQuickPrompt('Rédige l\'Histoire de la Maladie selon les règles absolues')" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-full font-medium whitespace-nowrap border border-indigo-200">
         ✨ Rédiger l'HdM
       </button>
     </div>
 
-    <!-- Input Footer -->
     <div class="p-2.5 bg-white border-t border-slate-200 flex items-center gap-2">
       <textarea id="chat-input" rows="1" placeholder="Écrivez vos notes cliniques..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}" class="flex-1 p-2 bg-slate-100 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
       <button onclick="sendMessage()" class="w-9 h-9 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center shadow transition touch-btn flex-shrink-0">
         <i class="fa-solid fa-paper-plane text-sm"></i>
       </button>
     </div>
-
   </div>
 
-  <!-- SCRIPT APPLICATION & GESTION DU MODE LOCAL / CLOUD -->
+  <!-- SCRIPT APPLICATION & FIREBASE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { 
@@ -637,7 +644,6 @@
       onSnapshot 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Remplacez ces valeurs par vos vraies clés Firebase lorsque vous souhaitez synchroniser sur le Cloud
     const firebaseConfig = {
       apiKey: "AIzaSyDIFxrQMQyx6sB9vvNPe1sTZeS1DMdbXvY",
       authDomain: "pulse-77283.firebaseapp.com",
@@ -654,15 +660,20 @@
       auth = getAuth(app);
       db = getFirestore(app);
     } catch(e) {
-      console.warn("Mode démo local activé sans Firebase :", e);
+      console.warn("Mode local de secours activé :", e);
     }
 
     window.db = db;
     window.auth = auth;
     window.colRef = db ? collection(db, "patients_medobs") : null;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.deleteDoc = deleteDoc;
+
     window.patients = JSON.parse(localStorage.getItem('medobs_patients_local') || '[]');
     window.currentPatientId = null;
 
+    // Exposition globale des fonctions
     window.handleLogin = handleLogin;
     window.handleSignUp = handleSignUp;
     window.handleLogout = handleLogout;
@@ -683,7 +694,8 @@
     window.toggleMessengerBubble = toggleMessengerBubble;
     window.sendMessage = sendMessage;
     window.sendQuickPrompt = sendQuickPrompt;
-    window.insertIntoEvolution = insertIntoEvolution;
+    window.generateObservationText = generateObservationText;
+    window.generateEvolutionText = generateEvolutionText;
     window.toggleToxDetails = toggleToxDetails;
     window.checkToxNone = checkToxNone;
     window.checkPsyNone = checkPsyNone;
@@ -691,18 +703,18 @@
     window.generateStaffReport = generateStaffReport;
     window.addTag = addTag;
 
-    // Initialisation au chargement de la page
     document.addEventListener("DOMContentLoaded", () => {
       updatePatientCount();
       renderPatientsList();
     });
 
+    let unsubscribeSnapshot = null;
+
     if (auth) {
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          showToast(`Connecté : ${user.email.split('@')[0]}`);
-          if (window.colRef) {
-            onSnapshot(window.colRef, (snapshot) => {
+          if (window.colRef && !unsubscribeSnapshot) {
+            unsubscribeSnapshot = onSnapshot(window.colRef, (snapshot) => {
               window.patients = [];
               snapshot.forEach((docSnap) => {
                 window.patients.push({ id: docSnap.id, ...docSnap.data() });
@@ -710,6 +722,8 @@
               localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
               updatePatientCount();
               renderPatientsList();
+            }, (err) => {
+              console.warn("Écoute Firestore en pause, utilisation du cache local.");
             });
           }
         }
@@ -719,7 +733,7 @@
     function bypassAuth() {
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('app-container').classList.remove('hidden');
-      showToast("Accès direct au dossier clinique");
+      showToast("Accès direct aux dossiers activé");
     }
 
     async function handleLogin() {
@@ -729,13 +743,13 @@
       errorEl.classList.add('hidden');
 
       try {
-        if (!auth) throw new Error("Firebase non configuré");
+        if (!auth) throw new Error("Auth non dispo");
         await signInWithEmailAndPassword(auth, email, password);
         bypassAuth();
       } catch (err) {
-        errorEl.innerText = "Erreur de connexion : bascule en mode démo.";
+        errorEl.innerText = "Connexion impossible, mode local activé";
         errorEl.classList.remove('hidden');
-        setTimeout(bypassAuth, 1200);
+        setTimeout(bypassAuth, 1000);
       }
     }
 
@@ -752,17 +766,21 @@
       }
 
       try {
-        if (!auth) throw new Error("Firebase non configuré");
+        if (!auth) throw new Error("Auth non dispo");
         await createUserWithEmailAndPassword(auth, email, password);
         bypassAuth();
       } catch (err) {
-        errorEl.innerText = "Création impossible : accès direct activé.";
+        errorEl.innerText = "Création impossible, mode local activé";
         errorEl.classList.remove('hidden');
-        setTimeout(bypassAuth, 1200);
+        setTimeout(bypassAuth, 1000);
       }
     }
 
     async function handleLogout() {
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
       if (auth) await signOut(auth);
       document.getElementById('app-container').classList.add('hidden');
       document.getElementById('auth-screen').classList.remove('hidden');
@@ -773,7 +791,6 @@
       evoDateEl.innerText = new Date().toLocaleDateString('fr-FR');
     }
 
-    // Ajout des mots-clés (bulles) dans le textarea
     function addTag(text) {
       const textarea = document.getElementById('field-hdm');
       if (textarea.value.length > 0) {
@@ -781,6 +798,36 @@
       } else {
         textarea.value = text;
       }
+    }
+
+    // Génération automatique d'un brouillon d'Observation Médicale à affiner
+    function generateObservationText() {
+      const age = document.getElementById('field-age').value || '[Âge]';
+      const sexe = document.getElementById('field-sexe').value === 'M' ? 'homme' : 'femme';
+      const motif = document.getElementById('field-motif').value || '[Motif d\'hospitalisation]';
+      const hdm = document.getElementById('field-hdm').value || '[Notes brutes de l\'HdM]';
+      const psy = document.getElementById('atcd-psy-free').value || 'Aucun ATCD psychiatrique particulier';
+      const tox = document.getElementById('atcd-tox-free').value || 'Aucune intoxication rapportée';
+      const traitement = document.getElementById('field-traitement').value || 'Aucun traitement antérieur';
+
+      const draft = `OBSERVATION CLINIQUE INITIALE\n\n- Patient : ${sexe} de ${age} ans, admis pour ${motif}.\n- Antécédents : ${psy} | Toxiques : ${tox}.\n- Histoire de la Maladie : ${hdm}\n- Traitement d'entrée : ${traitement}`;
+      
+      document.getElementById('field-obs-medicale').value = draft;
+      showToast("Observation médicale générée ! Vous pouvez l'affiner.");
+    }
+
+    // Génération automatique d'un brouillon de l'Évolution
+    function generateEvolutionText() {
+      const jour = document.getElementById('evo-jour-tag').value || "J d'hospitalisation";
+      const resume = document.getElementById('evo-resume-text').value || "État clinique stable";
+      const psyNotes = document.getElementById('evo-pres-free').value || document.getElementById('evo-pens-free').value || "Contact coopératif";
+      const phyNotes = document.getElementById('evo-phy-free').value || "Apyrétique, examen clinique sans particularité";
+      const cat = document.getElementById('evo-cat-text').value || "Poursuite de la prise en charge";
+
+      const evolutionDraft = `${jour} :\n- Bilan syndromique : ${resume}.\n- Examen psychologique : ${psyNotes}.\n- Examen physique : ${phyNotes}.\n- CAT : ${cat}.`;
+      
+      document.getElementById('evo-presentation-text').value = evolutionDraft;
+      showToast("Présentation de l'évolution générée !");
     }
 
     function toggleToxDetails() {
@@ -909,6 +956,7 @@
     async function saveCurrentPatient() {
       const motif = document.getElementById('field-motif').value.trim() || 'Patient sans motif spécifié';
       const pId = window.currentPatientId || ('patient_' + Date.now());
+      window.currentPatientId = pId;
       const existingPatient = window.patients.find(p => p.id === pId);
 
       const patientData = {
@@ -938,6 +986,7 @@
         atcd_med_free: document.getElementById('atcd-med-free').value,
 
         hdm: document.getElementById('field-hdm').value,
+        obs_medicale: document.getElementById('field-obs-medicale').value,
         
         om_pres_free: document.getElementById('om-pres-free').value,
         om_inst_free: document.getElementById('om-inst-free').value,
@@ -955,15 +1004,7 @@
         evolutions: existingPatient ? (existingPatient.evolutions || []) : []
       };
 
-      try {
-        if (db && window.colRef) {
-          await setDoc(doc(db, "patients_medobs", pId), patientData, { merge: true });
-        }
-      } catch (e) {
-        console.log("Sauvegarde Cloud indisponible, stockage en local.");
-      }
-
-      // Sauvegarde systématique dans le stockage local pour fiabilité totale
+      // 1. Sauvegarde locale immédiate
       const idx = window.patients.findIndex(p => p.id === pId);
       if (idx >= 0) window.patients[idx] = patientData;
       else window.patients.push(patientData);
@@ -973,6 +1014,15 @@
       renderPatientsList();
       showToast("Dossier enregistré !");
       switchView('list');
+
+      // 2. Synchronisation Firebase en arrière-plan
+      if (db && window.colRef) {
+        try {
+          await setDoc(doc(db, "patients_medobs", pId), patientData, { merge: true });
+        } catch (e) {
+          console.warn("Écriture Cloud échouée (sauvegarde locale active) :", e);
+        }
+      }
     }
 
     function loadPatientIntoForm(patientId) {
@@ -1000,6 +1050,7 @@
       document.getElementById('atcd-med-free').value = p.atcd_med_free || '';
 
       document.getElementById('field-hdm').value = p.hdm || '';
+      document.getElementById('field-obs-medicale').value = p.obs_medicale || '';
 
       document.getElementById('om-pres-free').value = p.om_pres_free || '';
       document.getElementById('om-inst-free').value = p.om_inst_free || '';
@@ -1072,6 +1123,7 @@
         date: new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}),
         jour: document.getElementById('evo-jour-tag').value.trim() || "J2 d'hospitalisation",
         resume: document.getElementById('evo-resume-text').value.trim(),
+        presentation: document.getElementById('evo-presentation-text').value.trim(),
         psy_chips: [...getCheckedValues('evo-pres-chip'), ...getCheckedValues('evo-inst-chip'), ...getCheckedValues('evo-pens-chip'), ...getCheckedValues('evo-aff-chip')],
         psy_free: `${document.getElementById('evo-pres-free').value} ${document.getElementById('evo-inst-free').value} ${document.getElementById('evo-pens-free').value} ${document.getElementById('evo-aff-free').value}`.trim(),
         phy_chips: getCheckedValues('evo-phy-chip'),
@@ -1101,11 +1153,8 @@
       container.innerHTML = evos.map(e => `
         <div class="bg-white p-3 rounded-xl border space-y-1 text-xs">
           <div class="font-bold text-medical-700">${e.jour} - ${e.date}</div>
+          ${e.presentation ? `<p class="bg-sky-50 p-2 rounded text-slate-800 font-mono"><strong>Présentation :</strong> ${e.presentation}</p>` : ''}
           ${e.resume ? `<p><strong>Résumé :</strong> ${e.resume}</p>` : ''}
-          ${e.psy_chips && e.psy_chips.length > 0 ? `<p><strong>Psy (coché) :</strong> ${e.psy_chips.join(', ')}</p>` : ''}
-          ${e.psy_free ? `<p><strong>Psy (notes) :</strong> ${e.psy_free}</p>` : ''}
-          ${e.phy_chips && e.phy_chips.length > 0 ? `<p><strong>Physique (coché) :</strong> ${e.phy_chips.join(', ')}</p>` : ''}
-          ${e.phy_free ? `<p><strong>Physique (notes) :</strong> ${e.phy_free}</p>` : ''}
           ${e.cat ? `<p><strong>CAT :</strong> ${e.cat}</p>` : ''}
         </div>
       `).join('');
@@ -1117,29 +1166,16 @@
       const etatcivil = document.getElementById('field-etatcivil').value || '[État civil]';
       const profession = document.getElementById('field-profession').value || '[Profession]';
       const motif = document.getElementById('field-motif').value || '[Motif d\'hospitalisation]';
-      const jourTag = document.getElementById('evo-jour-tag').value || "J2 d'hospitalisation";
-      
-      const toxChips = getCheckedValues('atcd-tox-chip').join(', ');
-      const toxDebut = document.getElementById('atcd-tox-debut').value || '[Ancienneté]';
-      const toxDerniere = document.getElementById('atcd-tox-derniere-prise').value || '[Dernière prise]';
-      const toxArret = document.getElementById('atcd-tox-raison-arret').value || '[Raison]';
-      const toxFree = document.getElementById('atcd-tox-free').value || '';
-      
-      const psyFree = document.getElementById('atcd-psy-free').value || '[Antécédents psychiatriques]';
-      const medFree = document.getElementById('atcd-med-free').value || '[Antécédents médicaux]';
-      const hdm = document.getElementById('field-hdm').value || '[Histoire de la maladie]';
+      const obsMed = document.getElementById('field-obs-medicale').value || '[Observation médicale non générée]';
       const traitement = document.getElementById('field-traitement').value || '[Traitement prescrit]';
 
       const output = `
         <div class="space-y-4 text-slate-800 text-xs font-mono bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <p><strong>- Il s’agit d’un ${sexe} de ${age} ans, ${etatcivil}, ${profession}, entré pour ${motif}, a ${jourTag} chez un patient avec antécédent toxique (${toxChips}, ${toxDebut}, dernière prise : ${toxDerniere}, raison : ${toxArret}).</strong></p>
-          
-          <p><strong>- ATCD Psychiatriques : ${psyFree}</strong></p>
-          <p><strong>- ATCD Médicaux / Toxiques : ${toxFree} | Médicaux : ${medFree}</strong></p>
+          <p><strong>- Il s’agit d’un ${sexe} de ${age} ans, ${etatcivil}, ${profession}, entré pour ${motif}.</strong></p>
 
           <div>
-            <p class="font-bold text-medical-700 underline">- Histoire de la Maladie (HDM) :</p>
-            <p class="whitespace-pre-line">${hdm}</p>
+            <p class="font-bold text-medical-700 underline">- Synthèse de l'Observation Médicale :</p>
+            <p class="whitespace-pre-line">${obsMed}</p>
           </div>
 
           <div>
@@ -1155,45 +1191,15 @@
 
     function copyObservationForAI() {
       generateStaffReport();
-      const hdmVal = document.getElementById('field-hdm').value;
-      
-      // CONSIGNE SYSTÈME INTÉGRÉE DE RÉDACTION CLINIQUE STRICTE
-      const systemPrompt = `
-Tu es un assistant de rédaction clinique rigoureux pour un dossier de psychiatrie. Ton unique mission est de rédiger le paragraphe de l'Histoire de la Maladie (HdM) à partir des notes brutes, en appliquant strictement et sans aucune exception les règles narratives ci-dessous.
-
-1. Chronologie Rétrograde & Valeur Fonctionnelle Immédiate (Règle d'or) :
-- Interdiction absolue d'une phrase d'introduction administrative (pas de "Le patient a été conduit..." au début).
-- La toute première phrase doit obligatoirement démarrer directement par le premier signe fonctionnel ou le motif d'appel observable le plus récent.
-- Remonte ensuite progressivement le fil du temps vers les jours les plus anciens.
-- La consultation et l'hospitalisation d'urgence finale doivent obligatoirement être rejetées et placées à la toute fin du paragraphe.
-
-2. Description Comportementale Brute (Zéro Étiquette) :
-- Interdiction formelle d'utiliser le moindre terme abstrait ou valise pour qualifier un comportement, une humeur ou une émotion (ex: interdiction absolue de dire agressivité, agitation, angoisse, anxiété, repli sur soi, tristesse).
-- Chaque état clinique doit obligatoirement être traduit et décrit de manière factuelle, physique, verbale et observable (ex: il déambule, parle seul de manière inintelligible, crie).
-
-3. Style Profane & Rejet du Jargon Technique (Interdiction Totale) :
-- Utilise exclusivement les mots, les expressions, les scènes et le vécu rapportés par le patient ou son entourage.
-- Interdiction absolue de tout jargon technique ou médical (pas de termes comme hallucination visuelle, délire, trouble de l'humeur, ni de termes de sémiologie). Fais transparaître les idées directrices uniquement à travers les faits bruts et les propos rapportés.
-
-4. Exploration Systématique des Éléments Obligatoires :
-- Les grandes fonctions instinctuelles : Le sommeil détaillé précisément (insomnie d'endormissement, insomnie totale, réveils), l'alimentation (appétit conservé, refus, baisse) et la communication.
-- Le contexte somatique : Mention explicite de la présence ou de l'absence de fébrilité (fièvre), et de la notion ou non de perte de connaissance.
-- Les traitements reçus et l'évolution : Traçabilité obligatoire des médicaments ou prises en charge essayés avant l'admission, avec la description précise de l'évolution associée sous traitement.
-
-5. Format et Syntaxe Stricts :
-- L'intégralité de l'Histoire de la Maladie doit tenir dans un seul et unique paragraphe fluide.
-- Utilise des phrases simples, reliées par des connecteurs temporels adaptés et le pronom "le" pour lier les éléments entre eux.
-
-Modèle de référence validé à respecter pour la structure et la fluidité :
-"Le 3 novembre, le patient affirme voir sa grand-mère et discute avec elle sans que l'entourage ne comprenne le sens de ses propos, sa nuit étant marquée par une absence totale de sommeil où il passe son temps à déambuler en parlant tout seul de manière inintelligible, avec un appétit conservé et une fatigue matinale au réveil, après avoir déjà présenté le 1er novembre une insomnie d'endormissement suivie également d'une fatigue au réveil, l'ensemble de cette évolution se déroulant sans la moindre notion de fièvre et sans aucun traitement reçu au préalable, ce qui a conduit sa famille à le conduire en consultation de psychiatrie d'urgence pour une hospitalisation dans le service le 4 novembre."
-      `;
-
-      const promptText = systemPrompt + `\n\nNotes brutes de l'étudiant à transformer :\n` + hdmVal;
-      navigator.clipboard.writeText(promptText).then(() => showToast("📋 Consignes et HdM prêtes pour l'IA !"));
+      const obsVal = document.getElementById('field-obs-medicale').value;
+      const systemPrompt = `Tu es un assistant de rédaction clinique rigoureux pour un dossier de psychiatrie. Rédige ou affine cette observation médicale selon les exigences cliniques strictes (chronologie rétrograde pour l'HdM, absence de jargon, description comportementale brute).`;
+      const promptText = systemPrompt + `\n\nNotes :\n` + obsVal;
+      navigator.clipboard.writeText(promptText).then(() => showToast("📋 Observation prête pour l'IA !"));
     }
 
     function copyEvolutionForAI() {
-      copyObservationForAI();
+      const evoText = document.getElementById('evo-presentation-text').value;
+      navigator.clipboard.writeText(evoText).then(() => showToast("📋 Présentation de l'évolution copiée !"));
     }
 
     function toggleMessengerBubble() {
@@ -1212,7 +1218,6 @@ Modèle de référence validé à respecter pour la structure et la fluidité :
       if (!text) return;
 
       const chatContainer = document.getElementById('chat-messages');
-
       chatContainer.innerHTML += `
         <div class="flex items-start justify-end gap-2">
           <div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-sm max-w-[85%] leading-relaxed">
@@ -1220,34 +1225,20 @@ Modèle de référence validé à respecter pour la structure et la fluidité :
           </div>
         </div>
       `;
-
       input.value = '';
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
       setTimeout(() => {
-        const responseText = `Consignes strictes appliquées. Vos notes brutes sont prêtes à être converties en Histoire de la Maladie clinique dans le champ dédié.`;
-
         chatContainer.innerHTML += `
           <div class="flex items-start gap-2">
             <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">IA</div>
-            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 text-slate-700 max-w-[85%] leading-relaxed space-y-2">
-              <p>${responseText}</p>
+            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 text-slate-700 max-w-[85%] leading-relaxed">
+              <p>Consignes prises en compte. Vous pouvez affiner directement le texte dans les champs dédiés.</p>
             </div>
           </div>
         `;
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }, 700);
-    }
-
-    function insertIntoEvolution(text) {
-      if (!window.currentPatientId) {
-        showToast("Sélectionnez ou créez d'abord un patient !");
-        return;
-      }
-      switchView('form');
-      switchFormTab('evo');
-      document.getElementById('evo-resume-text').value = text;
-      showToast("Texte réinjecté dans l'évolution !");
     }
 
     function showToast(msg) {
