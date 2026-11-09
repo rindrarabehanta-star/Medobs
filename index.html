@@ -137,12 +137,14 @@
           <div class="flex items-center gap-1.5 w-full sm:w-auto">
   <i class="fa-solid fa-robot text-indigo-600"></i>
   <select id="openrouter-model" class="p-1.5 border rounded-lg text-xs font-semibold bg-slate-50 outline-none w-full sm:w-auto">
-    <option value="google/gemini-pro-1.5">Gemini 1.5 Pro</option>
-    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-    <option value="openai/gpt-4o">GPT-4o</option>
-    <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</option>
-  </select>
-</div>
+  <!-- Modèles 100% GRATUITS (aucun crédit requis) -->
+  <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Gratuit)</option>
+  <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (Gratuit)</option>
+  
+  <!-- Modèles Payants (Nécessitent quelques centimes de crédits) -->
+  <option value="google/gemini-pro-1.5">Gemini 1.5 Pro</option>
+  <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+</select>
       </div>
 
       <!-- VIEW 1: PATIENTS LIST (ACCUEIL) -->
