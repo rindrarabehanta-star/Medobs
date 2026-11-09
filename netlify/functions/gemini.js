@@ -2,21 +2,22 @@ exports.handler = async function(event, context) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
   };
 
-  // Réponse immédiate pour les requêtes de vérification CORS (preflight)
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
 
-  // Sécurité : n'accepter que les requêtes de type POST
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: 'Method Not Allowed' };
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
   try {
-    const { apiKey, prompt } = JSON.parse(event.body);
+    const bodyData = JSON.parse(event.body || '{}');
+    const apiKey = bodyData.apiKey;
+    const prompt = bodyData.prompt;
 
     if (!apiKey || !prompt) {
       return {
@@ -26,7 +27,6 @@ exports.handler = async function(event, context) {
       };
     }
 
-    // Appel sécurisé vers l'API officielle de Google Gemini
     const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
