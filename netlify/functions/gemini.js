@@ -33,7 +33,14 @@ exports.handler = async function(event, context) {
     });
 
     const data = await response.json();
-
+      // Si l'API Google renvoie une erreur (clé invalide ou autre)
+    if (!response.ok) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: data.error?.message || "Erreur de l'API Google Gemini" })
+      };
+    }
     return {
       statusCode: 200,
       headers,
