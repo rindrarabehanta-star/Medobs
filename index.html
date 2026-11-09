@@ -995,10 +995,10 @@ Fournis uniquement le texte final de l'observation médicale mise en forme, sans
       throw new Error(data.error || "Réponse invalide du serveur.");
     }
   } catch (err) {
-    console.error(err);
-    alert("Erreur serveur : " + err.message + ". Basculement sur la génération locale.");
-    generateObservationText();
-  }
+  console.error(err);
+  // Afficher le message d'erreur précis renvoyé par le serveur
+  alert("Erreur détaillée : " + (err.message || JSON.stringify(err)));
+}
 }
 
     async function exportToWordDocx() {
