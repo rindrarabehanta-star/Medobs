@@ -931,38 +931,38 @@ ${traitement}`;
     // APPEL DIRECT CLIENT-SIDE À L'API GEMINI (v1beta / gemini-1.5-pro)
     // ==========================================
     async function generateObservationWithAI() {
-      const apiKey = document.getElementById('gemini-api-key').value.trim();
-      if (!apiKey) {
-        alert("Veuillez saisir votre clé API Google AI Studio dans le champ en haut de la page.");
-        return;
-      }
+  const apiKey = document.getElementById('gemini-api-key').value.trim(); // Renommez l'id de l'input en openrouter-api-key si besoin
+  if (!apiKey) {
+    alert("Veuillez saisir votre clé API OpenRouter.");
+    return;
+  }
 
-      showToast("Génération de l'observation complète par l'IA (gemini-1.5-pro) en cours...");
+  showToast("Génération de l'observation par OpenRouter en cours...");
 
-      const formData = {
-        nom: document.getElementById('field-nom').value,
-        prenom: document.getElementById('field-prenom').value,
-        age: document.getElementById('field-age').value,
-        sexe: document.getElementById('field-sexe').value,
-        etatcivil: document.getElementById('field-etatcivil').value,
-        profession: document.getElementById('field-profession').value,
-        motif: document.getElementById('field-motif').value,
-        biographie: document.getElementById('field-biographie').value,
-        hdmBrut: document.getElementById('field-hdm').value,
-        atcdPsy: document.getElementById('atcd-psy-free').value,
-        atcdTox: document.getElementById('atcd-tox-free').value,
-        atcdMed: document.getElementById('atcd-med-free').value,
-        constantes: document.getElementById('om-constantes').value,
-        traitement: document.getElementById('field-traitement').value
-      };
+  const formData = {
+    nom: document.getElementById('field-nom').value,
+    prenom: document.getElementById('field-prenom').value,
+    age: document.getElementById('field-age').value,
+    sexe: document.getElementById('field-sexe').value,
+    etatcivil: document.getElementById('field-etatcivil').value,
+    profession: document.getElementById('field-profession').value,
+    motif: document.getElementById('field-motif').value,
+    biographie: document.getElementById('field-biographie').value,
+    hdmBrut: document.getElementById('field-hdm').value,
+    atcdPsy: document.getElementById('atcd-psy-free').value,
+    atcdTox: document.getElementById('atcd-tox-free').value,
+    atcdMed: document.getElementById('atcd-med-free').value,
+    constantes: document.getElementById('om-constantes').value,
+    traitement: document.getElementById('field-traitement').value
+  };
 
-      const prompt = `Agis en tant qu'assistant clinicien expert en psychiatrie et neurologie. À partir des notes brutes et des informations ci-dessous, rédige l'intégralité d'une observation médicale hospitalière formelle, académique et structurée selon le plan officiel en 8 parties :
+  const prompt = `Agis en tant qu'assistant clinicien expert en psychiatrie et neurologie. À partir des notes brutes et des informations ci-dessous, rédige l'intégralité d'une observation médicale hospitalière formelle, académique et structurée selon le plan officiel en 8 parties :
 1. Identité & Profil Sociodémographique
 2. Motif d'hospitalisation
 3. Antécédents (ATCD)
 4. Biographie & Parcours de vie
-5. Histoire de la Maladie (HdM) : Rédige un récit clinique fluide en chronologie rétrograde (partir des symptômes actuels et remonter vers l'apparition des premiers signes) à partir des notes brutes.
-6. Examen Physique & Somatique Initial : Rédige chaque appareil de façon formelle en intégrant systématiquement les signes négatifs pertinents et ajoute une petite conclusion synthétique appareil par appareil.
+5. Histoire de la Maladie (HdM) : Rédige un récit clinique fluide en chronologie rétrograde à partir des notes brutes.
+6. Examen Physique & Somatique Initial : Rédige chaque appareil de façon formelle en intégrant les signes négatifs pertinents.
 7. Examen Psychiatrique Initial (OM)
 8. Traitement Prescrit
 
@@ -977,15 +977,42 @@ Données brutes du patient :
 
 Fournis uniquement le texte final de l'observation médicale mise en forme, sans commentaires superflus.`;
 
-      try {
-        // Utilisation du modèle gemini-1.5-pro via l'API v1beta
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
-        });
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': window.location.origin, // Optionnel pour OpenRouter
+        'X-Title': 'MedObs App' // Optionnel pour OpenRouter
+      },
+      body: JSON.stringify({
+        model: "google/gemini-1.5-pro", // Vous pouvez changer de modèle facilement ici (ex: anthropic/claude-3.5-sonnet)
+        messages: [
+          { role: "user", content: prompt }
+        ]
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Erreur de l'API OpenRouter");
+    }
+
+    // Récupération de la réponse au format OpenAI / OpenRouter
+    if (data.choices && data.choices[0].message && data.choices[0].message.content) {
+      const aiText = data.choices[0].message.content;
+      document.getElementById('field-obs-medicale').value = aiText;
+      showToast("Observation complète générée via OpenRouter !");
+    } else {
+      throw new Error("Format de réponse inattendu d'OpenRouter.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Erreur détaillée : " + (err.message || JSON.stringify(err)));
+  }
+}
 
         const data = await response.json();
 
