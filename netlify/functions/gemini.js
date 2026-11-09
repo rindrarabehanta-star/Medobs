@@ -5,10 +5,12 @@ exports.handler = async function(event, context) {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
+  // Réponse immédiate pour les requêtes de vérification CORS (preflight)
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
 
+  // Sécurité : n'accepter que les requêtes de type POST
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: 'Method Not Allowed' };
   }
@@ -24,7 +26,7 @@ exports.handler = async function(event, context) {
       };
     }
 
-    // Utilisation du modèle standard sans v1beta restrictif
+    // Appel sécurisé vers l'API officielle de Google Gemini
     const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
