@@ -24,16 +24,17 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    contents: [{ parts: [{ text: prompt }] }]
-  })
-});
+    // Utilisation du modèle standard sans v1beta restrictif
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
 
     const data = await response.json();
-      // Si l'API Google renvoie une erreur (clé invalide ou autre)
+
     if (!response.ok) {
       return {
         statusCode: 500,
@@ -41,6 +42,7 @@ exports.handler = async function(event, context) {
         body: JSON.stringify({ error: data.error?.message || "Erreur de l'API Google Gemini" })
       };
     }
+
     return {
       statusCode: 200,
       headers,
