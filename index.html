@@ -1,125 +1,1443 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full bg-slate-50">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Testeur Multi-API IA</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 650px; margin: 30px auto; padding: 20px; line-height: 1.5; }
-        label { font-weight: bold; display: block; margin-top: 15px; }
-        select, input, textarea { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; }
-        textarea { height: 100px; }
-        button { margin-top: 15px; padding: 12px 20px; background: #1a73e8; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%; }
-        button:hover { background: #1557b0; }
-        #response { background: #f4f6f8; padding: 15px; margin-top: 20px; border-radius: 5px; white-space: pre-wrap; border-left: 4px solid #1a73e8; }
-    </style>
-</head>
-<body>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MedObs - Psychiatrie, Neurologie & Assistant IA</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <h2>Testeur Multi-API (Modèles Gratuits)</h2>
+  <!-- docx.js et FileSaver.js pour l'export Word native -->
+  <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-    <label for="modelSelect">1. Choisissez le fournisseur et le modèle :</label>
-    <select id="modelSelect">
-        <optgroup label="Google AI Studio (1 clé Google pour tout ce groupe)">
-            <option value="google|gemini-3.8-flash">Google - Gemini 3.8 Flash (Recommandé)</option>
-            <option value="google|gemini-3.6-flash">Google - Gemini 3.6 Flash</option>
-            <option value="google|gemini-3.5-flash-lite">Google - Gemini 3.5 Flash-Lite (Ultra rapide)</option>
-            <option value="google|gemma-4">Google - Gemma 4 (Open-weight)</option>
-        </optgroup>
-        <optgroup label="OpenRouter (1 clé OpenRouter pour des dizaines de modèles :free)">
-            <option value="openrouter|openrouter/free">OpenRouter - Routeur Automatique Gratuit</option>
-            <option value="openrouter|deepseek/deepseek-r1:free">OpenRouter - DeepSeek R1 (Gratuit)</option>
-        </optgroup>
-        <optgroup label="Groq (1 clé Groq - Vitesse extrême)">
-            <option value="groq|llama-3.3-70b-versatile">Groq - Llama 3.3 70B</option>
-        </optgroup>
-        <optgroup label="Mistral AI (1 clé Mistral)">
-            <option value="mistral|mistral-small-latest">Mistral - Mistral Small</option>
-        </optgroup>
-    </select>
-
-    <label for="apiKey">2. Clé API du fournisseur sélectionné :</label>
-    <input type="password" id="apiKey" placeholder="Collez la clé correspondant au fournisseur choisi ci-dessus">
-
-    <label for="prompt">3. Votre question :</label>
-    <textarea id="prompt" placeholder="Écrivez votre message ici..."></textarea>
-
-    <button onclick="envoyerRequete()">Envoyer la requête</button>
-
-    <h3>Réponse :</h3>
-    <div id="response">En attente d'une requête...</div>
-
-    <script>
-        async function envoyerRequete() {
-            const selection = document.getElementById('modelSelect').value;
-            const [provider, model] = selection.split('|'); // Sépare le fournisseur et le nom du modèle
-            const apiKey = document.getElementById('apiKey').value.trim();
-            const prompt = document.getElementById('prompt').value.trim();
-            const responseDiv = document.getElementById('response');
-
-            if (!apiKey || !prompt) {
-                alert("Veuillez renseigner la clé API et votre message.");
-                return;
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            medical: {
+              50: '#f0f9ff', 100: '#e0f2fe', 500: '#0284c7', 600: '#0369a1', 700: '#075985', 800: '#0c4a6e',
             }
-
-            responseDiv.textContent = `Interrogation de ${model} via ${provider}...`;
-
-            let url = "";
-            let headers = { "Content-Type": "application/json" };
-            let body = {};
-
-            // CONDITIONNEMENT SELON LE FOURNISSEUR
-            if (provider === "google") {
-                // Format spécifique à l'API Google Gemini
-                url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-                body = {
-                    contents: [{ parts: [{ text: prompt }] }]
-                };
-            } else {
-                // Format standard (compatible OpenAI) utilisé par OpenRouter, Groq et Mistral
-                headers["Authorization"] = `Bearer ${apiKey}`;
-                body = {
-                    model: model,
-                    messages: [{ role: "user", content: prompt }]
-                };
-
-                if (provider === "openrouter") {
-                    url = "https://openrouter.ai/api/v1/chat/completions";
-                } else if (provider === "groq") {
-                    url = "https://api.groq.com/openai/v1/chat/completions";
-                } else if (provider === "mistral") {
-                    url = "https://api.mistral.ai/v1/chat/completions";
-                }
-            }
-
-            try {
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: headers,
-                    body: JSON.stringify(body)
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error?.message || JSON.stringify(data));
-                }
-
-                // EXTRACTION DE LA RÉPONSE SELON LE FORMAT DU FOURNISSEUR
-                let texteFinal = "";
-                if (provider === "google") {
-                    texteFinal = data.candidates[0].content.parts[0].text;
-                } else {
-                    texteFinal = data.choices[0].message.content;
-                }
-
-                responseDiv.textContent = texteFinal;
-
-            } catch (err) {
-                responseDiv.textContent = "Erreur : " + err.message;
-            }
+          }
         }
-    </script>
+      }
+    }
+  </script>
 
+  <style>
+    /* Correctif anti-affichage brut si Tailwind tarde à charger */
+    .hidden { display: none !important; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .touch-btn:active { transform: scale(0.97); opacity: 0.9; }
+    @keyframes pulse-subtle {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .animate-pulse-subtle { animation: pulse-subtle 3s infinite ease-in-out; }
+  </style>
+</head>
+<body class="h-full font-sans text-slate-800 antialiased flex flex-col justify-between select-none relative">
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl space-y-4 text-center">
+      <div class="w-14 h-14 bg-sky-100 rounded-full flex items-center justify-center mx-auto text-medical-600 text-2xl">
+        <i class="fa-solid fa-brain"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">MedObs Access</h2>
+        <p class="text-xs text-slate-500">Connectez-vous pour accéder à vos patients Firebase</p>
+      </div>
+
+      <div class="space-y-3 text-left">
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Email</label>
+          <input type="email" id="auth-email" placeholder="votre@email.com" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-medical-500 outline-none">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Mot de passe</label>
+          <input type="password" id="auth-password" placeholder="••••••••" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-medical-500 outline-none">
+        </div>
+      </div>
+
+      <p id="auth-error" class="text-xs text-rose-600 font-semibold hidden"></p>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="handleLogin()" class="flex-1 py-2.5 bg-medical-600 text-white font-bold rounded-xl text-sm shadow hover:bg-medical-700 touch-btn">
+          Se connecter
+        </button>
+        <button onclick="handleSignUp()" class="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-200 touch-btn">
+          Créer un compte
+        </button>
+      </div>
+      <button onclick="bypassAuth()" class="w-full py-2 text-xs font-semibold text-slate-400 hover:text-slate-600 underline">
+        Continuer en mode local / hors-ligne
+      </button>
+    </div>
+  </div>
+
+  <!-- APPLICATION CONTAINER -->
+  <div id="app-container" class="flex-1 flex flex-col justify-between h-full hidden">
+
+    <!-- Application Header -->
+    <header class="bg-medical-700 text-white sticky top-0 z-30 shadow-md">
+      <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-brain text-2xl text-sky-300"></i>
+          <div>
+            <h1 class="font-bold text-lg leading-none">MedObs - Psychiatrie & Neuro</h1>
+            <span class="text-xs text-sky-200">Saisie Modulaire & Assistant IA</span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="toggleMessengerBubble()" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition touch-btn">
+            <i class="fa-solid fa-comments"></i>
+            <span class="hidden sm:inline">Brainstorming</span>
+          </button>
+          <button onclick="switchView('list')" class="px-3 py-1.5 bg-medical-800 hover:bg-medical-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition touch-btn">
+            <i class="fa-solid fa-folder-open text-sky-300"></i>
+            <span>Dossiers (<span id="patient-count">0</span>)</span>
+          </button>
+          <button onclick="handleLogout()" class="p-1.5 text-sky-200 hover:text-white transition" title="Se déconnecter">
+            <i class="fa-solid fa-right-from-bracket text-base"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 pb-24 overflow-y-auto">
+
+      <!-- Toast Notification Box -->
+      <div id="toast" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 transition-all">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-text">Notification</span>
+      </div>
+
+      <!-- CONFIGURATION API KEY MULTI-FOURNISSEURS -->
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-col sm:flex-row items-center gap-2 text-xs">
+        <div class="flex items-center gap-1.5 w-full sm:w-auto">
+          <i class="fa-solid fa-key text-medical-600"></i>
+          <span class="font-semibold text-slate-700">Clé API :</span>
+        </div>
+        <input type="password" id="openrouter-api-key" placeholder="Collez votre clé AIzaSy... ou sk-or-v1-..." class="flex-1 w-full p-1.5 border rounded-lg font-mono text-xs outline-none focus:ring-2 focus:ring-medical-500">
+        
+        <div class="flex items-center gap-1.5 w-full sm:w-auto">
+          <i class="fa-solid fa-robot text-indigo-600"></i>
+          <select id="openrouter-model" class="p-1.5 border rounded-lg text-xs font-semibold bg-slate-50 outline-none w-full sm:w-auto">
+            <optgroup label="Google AI Studio (Gratuit - AIzaSy...)">
+              <option value="google|gemini-3.5-flash-lite" selected>Gemini 3.5 Flash-Lite (Gratuit)</option>
+              <option value="google|gemini-3.8-flash">Gemini 3.8 Flash (Gratuit)</option>
+              <option value="google|gemini-3.6-flash">Gemini 3.6 Flash (Gratuit)</option>
+              <option value="google|gemma-4">Gemma 4 (Gratuit)</option>
+            </optgroup>
+            <optgroup label="OpenRouter (Gratuit - sk-or-v1-...)">
+              <option value="openrouter|openrouter/free">OpenRouter Auto (Gratuit)</option>
+              <option value="openrouter|meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Gratuit)</option>
+              <option value="openrouter|deepseek/deepseek-r1:free">DeepSeek R1 (Gratuit)</option>
+            </optgroup>
+            <optgroup label="Groq (Gratuit - gsk_...)">
+              <option value="groq|llama-3.3-70b-versatile">Groq Llama 3.3 70B (Gratuit)</option>
+            </optgroup>
+            <optgroup label="Mistral AI (Gratuit)">
+              <option value="mistral|mistral-small-latest">Mistral Small (Gratuit)</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <!-- VIEW 1: PATIENTS LIST (ACCUEIL) -->
+      <section id="view-list" class="space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="text-base font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-users text-medical-600"></i> Mes Patients Suivis (Firebase)
+          </h2>
+          <div>
+            <button onclick="startNewPatient()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5 touch-btn">
+              <i class="fa-solid fa-user-plus"></i> Nouveau Patient
+            </button>
+          </div>
+        </div>
+
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+          <input type="text" id="search-patient" placeholder="Rechercher nom, motif, âge..." onkeyup="renderPatientsList()" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-medical-500 shadow-sm">
+        </div>
+
+        <div id="patients-container" class="space-y-3"></div>
+      </section>
+
+      <!-- VIEW 2: FORM, EVOLUTION & 3RD TAB -->
+      <section id="view-form" class="hidden space-y-4">
+        
+        <!-- Header -->
+        <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button onclick="switchView('list')" class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 touch-btn">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+              <h3 id="display-patient-name" class="font-bold text-slate-800 text-base">Patient</h3>
+              <span id="display-patient-info" class="text-xs font-medium text-slate-500">Observation Clinique & Sémiologique</span>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="copyObservationForAI()" class="px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-xs font-bold flex items-center gap-1.5 touch-btn shadow">
+              <i class="fa-solid fa-robot"></i> 📋 Copier pour l'IA
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Tabs Navigation -->
+        <div class="grid grid-cols-3 gap-1 bg-slate-200 p-1 rounded-xl text-xs font-bold text-slate-600">
+          <button id="tab-btn-obs" onclick="switchFormTab('obs')" class="py-2 rounded-lg text-center bg-white text-medical-700 shadow">
+            <i class="fa-solid fa-clipboard-list mr-1"></i> Observation
+          </button>
+          <button id="tab-btn-evo" onclick="switchFormTab('evo')" class="py-2 rounded-lg text-center hover:text-slate-900">
+            <i class="fa-solid fa-chart-line mr-1"></i> Évolutions (<span id="evo-count">0</span>)
+          </button>
+          <button id="tab-btn-fiche" onclick="switchFormTab('fiche')" class="py-2 rounded-lg text-center hover:text-slate-900">
+            <i class="fa-solid fa-file-lines mr-1"></i> 📄 Fiche Staff
+          </button>
+        </div>
+
+        <!-- TAB 1: OBSERVATION INITIALE COMPLÈTE -->
+        <div id="tab-content-obs" class="space-y-4">
+          
+          <!-- IDENTITÉ & PROFIL SOCIODÉMOGRAPHIQUE -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-id-card"></i> Identité & Profil Sociodémographique
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div><label class="font-medium text-slate-500">Nom</label><input type="text" id="field-nom" placeholder="Nom..." class="w-full p-2 border rounded-lg font-semibold"></div>
+              <div><label class="font-medium text-slate-500">Prénom</label><input type="text" id="field-prenom" placeholder="Prénom..." class="w-full p-2 border rounded-lg font-semibold"></div>
+              <div><label class="font-medium text-slate-500">Âge</label><input type="text" id="field-age" placeholder="ex: 44 ans" class="w-full p-2 border rounded-lg font-semibold"></div>
+              <div><label class="font-medium text-slate-500">Sexe</label><select id="field-sexe" class="w-full p-2 border rounded-lg font-semibold"><option value="M">Masculin</option><option value="F">Féminin</option></select></div>
+              <div><label class="font-medium text-slate-500">État civil</label><input type="text" id="field-etatcivil" placeholder="Célibataire..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Profession</label><input type="text" id="field-profession" placeholder="Profession..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">NSE (Socio-Éco)</label><input type="text" id="field-nse" placeholder="Niveau..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Scolarité</label><input type="text" id="field-scolarite" placeholder="Niveau..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Religion</label><input type="text" id="field-religion" placeholder="Religion..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Fratrie</label><input type="text" id="field-fratrie" placeholder="ex: 2/5..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Originaire de</label><input type="text" id="field-origine" placeholder="Ville..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Nationalité</label><input type="text" id="field-nationalite" value="Malagasy" class="w-full p-2 border rounded-lg"></div>
+            </div>
+            <div class="pt-2">
+              <label class="text-xs font-medium text-slate-500">Motif principal d'hospitalisation</label>
+              <input type="text" id="field-motif" placeholder="ex: Trouble du comportement..." class="w-full p-2 border rounded-lg text-sm font-semibold">
+            </div>
+          </div>
+
+          <!-- ANTÉCÉDENTS (ATCD) INTERACTIFS -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-notes-medical"></i> Antécédents (ATCD) Interactifs
+            </h4>
+
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
+              <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-wine-glass-drop text-amber-600"></i> A. Habitudes Toxiques :</span>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip" value="Alcool" onchange="toggleToxDetails()"> Alcool</label>
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip" value="Tabac" onchange="toggleToxDetails()"> Tabac</label>
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip" value="Cannabis / THC" onchange="toggleToxDetails()"> Cannabis / THC</label>
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip" value="Médicaments détournés" onchange="toggleToxDetails()"> Médicaments</label>
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer font-bold text-slate-600"><input type="checkbox" id="atcd-tox-none" onchange="checkToxNone(this)"> Aucune habitude toxique</label>
+              </div>
+
+              <div id="tox-extra-fields" class="hidden grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-200">
+                <div>
+                  <label class="font-medium text-slate-500">Date de début / Ancienneté</label>
+                  <input type="text" id="atcd-tox-debut" placeholder="ex: Depuis l'adolescence" class="w-full p-2 border rounded-lg bg-white">
+                </div>
+                <div>
+                  <label class="font-medium text-slate-500 text-rose-600 font-bold">Dernière prise (Heure/Date)</label>
+                  <input type="text" id="atcd-tox-derniere-prise" placeholder="ex: Samedi 30 octobre" class="w-full p-2 border rounded-lg bg-white border-rose-200">
+                </div>
+                <div>
+                  <label class="font-medium text-slate-500">Raison d'arrêt / Quantités</label>
+                  <input type="text" id="atcd-tox-raison-arret" placeholder="ex: 2 prises/jour" class="w-full p-2 border rounded-lg bg-white">
+                </div>
+              </div>
+              <textarea id="atcd-tox-free" rows="1.5" placeholder="✎ Précisions toxiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
+              <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-brain text-indigo-600"></i> B. Antécédents Psychiatriques :</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-psy-chip" value="Hospitalisation en psychiatrie antérieure"> Hospitalisation en psychiatrie</label>
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-psy-chip" value="Épisodes thymiques / MMD antérieurs"> Épisodes thymiques / MMD</label>
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer font-bold text-slate-600"><input type="checkbox" id="atcd-psy-none" onchange="checkPsyNone(this)"> Pas d'ATCD psychiatrique</label>
+              </div>
+              <textarea id="atcd-psy-free" rows="2" placeholder="✎ Précisions psychiatriques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
+              <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-heart-pulse text-rose-600"></i> C. Antécédents Médicaux :</span>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-med-chip" value="Épilepsie / Crises convulsives"> Épilepsie / Crises</label>
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-med-chip" value="HTA / Diabète"> HTA / Diabète</label>
+                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer font-bold text-slate-600"><input type="checkbox" id="atcd-med-none" onchange="checkMedNone(this)"> Pas d'ATCD médical</label>
+              </div>
+              <textarea id="atcd-med-free" rows="1.5" placeholder="✎ Précisions médicales..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+          </div>
+
+          <!-- BIOGRAPHIE & PARCOURS DE VIE -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-book-open"></i> Biographie & Parcours de Vie
+            </h4>
+            <textarea id="field-biographie" rows="3" placeholder="Notes biographiques, parcours de vie, scolarité, événements marquants..." class="w-full p-2 border rounded-lg text-xs bg-slate-50"></textarea>
+          </div>
+
+          <!-- HISTOIRE DE LA MALADIE (HDM) AVEC SAISIE RAPIDE -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Histoire de la Maladie (HdM) - Saisie Rapide
+            </h4>
+
+            <div class="tags-group flex flex-wrap gap-1.5 items-center">
+              <span class="tag-title text-xs font-bold text-slate-500 w-full">Sommeil & Comportement :</span>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Insomnie d\'endormissement')">+ Insomnie d'endormissement</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Insomnie totale')">+ Insomnie totale</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Fatigue au réveil')">+ Fatigue au réveil</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Déambulation et propos inintelligibles')">+ Déambulation / Propos inintelligibles</button>
+            </div>
+
+            <div class="tags-group flex flex-wrap gap-1.5 items-center mt-2">
+              <span class="tag-title text-xs font-bold text-slate-500 w-full">Somatique, Instinctuel & Traitement :</span>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Appétit conservé')">+ Appétit conservé</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Sans fièvre')">+ Sans fièvre</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Aucun traitement reçu au préalable')">+ Aucun traitement reçu</button>
+            </div>
+
+            <textarea id="field-hdm" rows="4" placeholder="Tapez les notes brutes de l'HdM ici..." class="w-full p-2.5 border rounded-xl bg-slate-50 text-xs mt-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
+          </div>
+
+          <!-- EXAMEN PHYSIQUE & SOMATIQUE INITIAL (MODÈLE COMPLET INTÉGRÉ) -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-stethoscope"></i> Examen Physique & Somatique Initial Complet
+            </h4>
+
+            <!-- 1. État Général -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <span class="font-bold text-slate-700 block">1. État Général</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip" value="Bon état général."> Bon état général</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip" value="Apyrétique."> Apyrétique</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip" value="Absence de signes de déshydratation."> Absence de signes de déshydratation</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip" value="Absence de détresse respiratoire."> Absence de détresse respiratoire</label>
+              </div>
+              <textarea id="om-gen-free" rows="1.5" placeholder="✎ Précisions état général..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <!-- 2. Constantes Vitales -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <span class="font-bold text-slate-700 block">2. Constantes Vitales</span>
+              <input type="text" id="om-constantes" placeholder="ex: PA: 120/80 mmHg, Pouls: 78/min, T°: 36.8°C, SpO2: 98%" class="w-full p-2 border rounded-lg bg-white">
+            </div>
+
+            <!-- 3. Appareil Cardiovasculaire -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <span class="font-bold text-slate-700 block"><i class="fa-solid fa-heart-pulse text-rose-600"></i> 3. Examen Cardiovasculaire</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="Absence de cyanose."> Absence de cyanose</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="Absence de turgescence jugulaire."> Absence de turgescence jugulaire</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="Absence d'œdèmes des membres inférieurs."> Absence d'œdèmes des MI</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="Choc de pointe palpable non dévié."> Choc de pointe palpable non dévié</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="B1/B2 réguliers, pas de souffle."> B1/B2 réguliers, pas de souffle</label>
+              </div>
+              <textarea id="om-cardio-free" rows="1.5" placeholder="✎ Précisions cardiovasculaires..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <!-- 4. Appareil Pleuropulmonaire -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <span class="font-bold text-slate-700 block"><i class="fa-solid fa-lungs text-sky-600"></i> 4. Examen Pleuropulmonaire</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pulmo-chip" value="Thorax symétrique, mouvements respiratoires réguliers et symétriques."> Thorax et mouvements symétriques</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pulmo-chip" value="Murmure vésiculaire bien perçu et symétrique, sans râles."> Murmure vésiculaire normal, pas de râles</label>
+              </div>
+              <textarea id="om-pulmo-free" rows="1.5" placeholder="✎ Précisions pleuropulmonaires..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <!-- 5. Appareil Abdominal -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <span class="font-bold text-slate-700 block"><i class="fa-solid fa-stomach text-emerald-600"></i> 5. Examen Abdominal</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-abdo-chip" value="Abdomen souple, indolore, sans masse palpable ni organomégalie."> Abdomen souple, indolore</label>
+              </div>
+              <textarea id="om-abdo-free" rows="1.5" placeholder="✎ Précisions abdominales..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <!-- 6. Examen Neurologique -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <span class="font-bold text-slate-700 block"><i class="fa-solid fa-brain text-medical-600"></i> 6. Examen Neurologique (Normal)</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Conscient, vigilant, bien orienté, Glasgow 15/15 (E4V5M6)."> Conscient, Glasgow 15/15</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Paires crâniennes (I à XII) intactes."> Paires crâniennes I à XII intactes</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Force musculaire conservée aux 4 membres (5/5 MRC)."> Force 5/5 MRC aux 4 membres</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="ROT présents et symétriques, Babinski absent."> ROT présents et symétriques, Babinski absent</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Marche et coordination normales, Romberg négatif."> Marche et coordination normales</label>
+              </div>
+              <textarea id="om-neuro-free" rows="1.5" placeholder="✎ Précisions neurologiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <!-- 7. Aires Ganglionnaires -->
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <span class="font-bold text-slate-700 block">7. Aires Ganglionnaires</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gang-chip" value="Aires ganglionnaires libres."> Aires ganglionnaires libres</label>
+              </div>
+              <textarea id="om-gang-free" rows="1.5" placeholder="✎ Précisions aires ganglionnaires..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+          </div>
+
+          <!-- EXAMEN PSYCHIATRIQUE INITIAL (OM) -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+                <i class="fa-solid fa-brain"></i> Examen Psychiatrique Initial (OM)
+              </h4>
+              <label class="flex items-center gap-1 text-[11px] text-medical-700 bg-slate-50 px-2 py-1 rounded border cursor-pointer font-semibold">
+                <input type="checkbox" onchange="toggleAutoPsyOM(this)"> Remplissage auto
+              </label>
+            </div>
+            
+            <div class="bg-slate-50 p-3 rounded-xl space-y-2 border text-xs">
+              <span class="font-bold text-slate-700 block">A. Présentation / Contact / Comportement :</span>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Tenue adaptée"> Tenue adaptée</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Hypomimie"> Hypomimie</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Contact facile"> Contact facile</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Pas d'agitation"> Pas d'agitation</label>
+              </div>
+              <textarea id="om-pres-free" rows="1.5" placeholder="✎ Précisions présentation..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl space-y-2 border text-xs">
+              <span class="font-bold text-slate-700 block">B. Conduites instinctuelles :</span>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip" value="Sphincters normaux"> Sphincters normaux</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip" value="Sommeil conservé 8h"> Sommeil conservé (8h)</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip" value="Alimentation normale"> Alimentation normale</label>
+              </div>
+              <textarea id="om-inst-free" rows="1.5" placeholder="✎ Précisions conduites instinctuelles..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl space-y-2 border text-xs">
+              <span class="font-bold text-slate-700 block">C. Fonctions supérieures & Pensée :</span>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Pas de barrage"> Pas de barrage</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Mémoire intacte"> Mémoire intacte</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Cours pensée normal"> Cours pensée normal</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Pas d'hallucination"> Pas d'hallucination</label>
+              </div>
+              <textarea id="om-pens-free" rows="1.5" placeholder="✎ Précisions fonctions supérieures..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl space-y-2 border text-xs">
+              <span class="font-bold text-slate-700 block">D. Affects & Humeur :</span>
+              <div class="grid grid-cols-2 gap-1.5">
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-aff-chip" value="Humeur athymique"> Humeur athymique</label>
+                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-aff-chip" value="Pas d'anxiété"> Pas d'anxiété</label>
+              </div>
+              <textarea id="om-aff-free" rows="1.5" placeholder="✎ Précisions affectivité..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+          </div>
+
+          <!-- TRAITEMENT & SYNTHÈSE -->
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-scale-balanced"></i> Traitement Prescrit
+            </h4>
+            <div>
+              <textarea id="field-traitement" rows="3" placeholder="Prescriptions..." class="w-full p-2 border rounded-lg text-xs font-mono"></textarea>
+            </div>
+          </div>
+
+          <!-- OBSERVATION MÉDICALE GÉNÉRÉE ET EXPORT WORD -->
+          <div class="bg-indigo-50/60 p-4 rounded-2xl shadow-sm border border-indigo-200 space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-file-pen"></i> Observation Médicale Complète (Générée & Prête)
+              </h4>
+              <div class="flex gap-2">
+                <button onclick="generateObservationText()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow touch-btn flex items-center gap-1.5">
+                  <i class="fa-solid fa-bolt"></i> Local
+                </button>
+                <button onclick="generateObservationWithAI()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow touch-btn flex items-center gap-1.5">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 IA
+                </button>
+                <button onclick="exportToWordDocx()" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow touch-btn flex items-center gap-1.5">
+                  <i class="fa-solid fa-file-word"></i> Word
+                </button>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500">Ce champ assemble tout le dossier. Vous pouvez l'actualiser localement ou via l'API IA sélectionnée.</p>
+            <textarea id="field-obs-medicale" rows="12" placeholder="Cliquez sur '🤖 IA' ou 'Local'..." class="w-full p-3 border border-indigo-200 rounded-xl bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/25 font-mono leading-relaxed"></textarea>
+          </div>
+
+          <button onclick="saveCurrentPatient()" class="w-full py-3.5 bg-medical-600 hover:bg-medical-700 text-white rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 touch-btn">
+            <i class="fa-solid fa-floppy-disk"></i> Enregistrer le Dossier Patient (Firebase & Local)
+          </button>
+
+        </div>
+
+        <!-- TAB 2: ÉVOLUTIONS JOURNALIÈRES -->
+        <div id="tab-content-evo" class="hidden space-y-4">
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b pb-2">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
+                <i class="fa-solid fa-notes-medical"></i> Saisie Évolution Journalière du Patient
+              </h4>
+              <span id="evo-date-display" class="text-xs font-bold text-medical-700 bg-sky-50 px-2 py-1 rounded border border-sky-100">--/--/----</span>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <h5 class="font-bold text-slate-700"><i class="fa-solid fa-file-contract text-medical-600"></i> 1. Résumé Syndromique du Jour</h5>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div>
+                  <label class="font-medium text-slate-500">Jour d'hospitalisation</label>
+                  <input type="text" id="evo-jour-tag" placeholder="ex: J2 d'hospitalisation" class="w-full p-2 border rounded-lg font-semibold">
+                </div>
+                <div class="col-span-2">
+                  <label class="font-medium text-slate-500">Résumé synthétique / fait marquant</label>
+                  <input type="text" id="evo-resume-text" placeholder="ex: Patient stable" class="w-full p-2 border rounded-lg">
+                </div>
+              </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
+              <div class="flex items-center justify-between">
+                <h5 class="font-bold text-slate-700"><i class="fa-solid fa-brain text-medical-600"></i> 2. Examen Psychiatrique du Jour</h5>
+                <label class="flex items-center gap-1 text-[11px] text-medical-700 bg-white px-2 py-1 rounded border cursor-pointer font-semibold">
+                  <input type="checkbox" onchange="toggleAutoPsyEvo(this)"> Remplissage auto
+                </label>
+              </div>
+
+              <div class="space-y-2">
+                <span class="font-semibold text-slate-600 block">A. Présentation / Contact / Comportement :</span>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Tenue adaptée"> Tenue adaptée</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Hypomimie"> Hypomimie</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Contact facile"> Contact facile</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Pas d'agitation"> Pas d'agitation</label>
+                </div>
+                <textarea id="evo-pres-free" rows="1" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              </div>
+
+              <div class="space-y-2">
+                <span class="font-semibold text-slate-600 block">B. Conduites instinctuelles :</span>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip" value="Sphincters normaux"> Sphincters normaux</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip" value="Sommeil conservé 8h"> Sommeil conservé (8h)</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip" value="Alimentation normale"> Alimentation normale</label>
+                </div>
+                <textarea id="evo-inst-free" rows="1" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              </div>
+
+              <div class="space-y-2">
+                <span class="font-semibold text-slate-600 block">C. Fonctions supérieures & Pensée :</span>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Langage fluide"> Langage fluide</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Mémoire intacte"> Mémoire intacte</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Cours pensée normal"> Cours pensée normal</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Pas d'hallucination"> Pas d'hallucination</label>
+                </div>
+                <textarea id="evo-pens-free" rows="1" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              </div>
+
+              <div class="space-y-2">
+                <span class="font-semibold text-slate-600 block">D. Affects & Humeur :</span>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-aff-chip" value="Humeur athymique"> Humeur athymique</label>
+                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-aff-chip" value="Pas d'anxiété"> Pas d'anxiété</label>
+                </div>
+                <textarea id="evo-aff-free" rows="1" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
+              <div class="flex items-center justify-between">
+                <h5 class="font-bold text-slate-700"><i class="fa-solid fa-stethoscope text-medical-600"></i> 3. Examen Physique & Neurologique du Jour</h5>
+                <label class="flex items-center gap-1 text-[11px] text-medical-700 bg-white px-2 py-1 rounded border cursor-pointer font-semibold">
+                  <input type="checkbox" onchange="toggleAutoPhyEvo(this)"> Remplissage auto
+                </label>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Bon état général, apyrétique"> Bon état général, apyrétique</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Cardiovasculaire normal"> Cardiovasculaire normal</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Pulmonaire normal"> Pulmonaire normal</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Abdomen souple, indolore"> Abdomen souple, indolore</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Conscient, Glasgow 15/15"> Conscient, GCS 15/15</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Paires crâniennes I à XII intactes"> Paires crâniennes I à XII intactes</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Force 5/5 MRC aux 4 membres, ROT normaux"> Force 5/5 MRC, ROT normaux</label>
+                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Aires ganglionnaires libres"> Aires ganglionnaires libres</label>
+              </div>
+              <textarea id="evo-phy-free" rows="1.5" placeholder="✎ Précisions examens physiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
+              <h5 class="font-bold text-slate-700"><i class="fa-solid fa-scale-balanced text-medical-600"></i> 4. Traitement & Conduite à Tenir (CAT) du jour</h5>
+              <textarea id="evo-cat-text" rows="2" placeholder="ex: Poursuite du traitement..." class="w-full p-2 border rounded-lg bg-white"></textarea>
+            </div>
+
+            <div class="p-3 bg-sky-50/60 rounded-xl border border-sky-100 space-y-2 text-xs">
+              <div class="flex items-center justify-between">
+                <h5 class="font-bold text-sky-800"><i class="fa-solid fa-pen-nib text-sky-600"></i> 5. Présentation de l'Évolution (Rédigée & Affinée)</h5>
+                <button onclick="generateEvolutionText()" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
+                  Générer / Actualiser
+                </button>
+              </div>
+              <textarea id="evo-presentation-text" rows="3" placeholder="Texte synthétique et rédigé de l'évolution du jour..." class="w-full p-2.5 border border-sky-200 rounded-xl bg-white font-mono text-xs"></textarea>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+              <button onclick="addEvolutionEntry()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 touch-btn">
+                <i class="fa-solid fa-plus-circle"></i> Enregistrer l'Évolution
+              </button>
+              <button onclick="copyEvolutionForAI()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 touch-btn">
+                <i class="fa-solid fa-robot"></i> 📋 Copier Évol. pour l'IA
+              </button>
+            </div>
+          </div>
+
+          <div id="evo-history-list" class="space-y-3"></div>
+        </div>
+
+        <!-- TAB 3: FICHE DE PRÉSENTATION -->
+        <div id="tab-content-fiche" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-6 text-sm leading-relaxed">
+            <div class="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 class="font-bold text-medical-700 text-base flex items-center gap-2">
+                  <i class="fa-solid fa-file-medical-alt"></i> Fiche d'Évolution Clinique Rédigée (Staff)
+                </h3>
+                <p class="text-xs text-slate-500">Modèle quotidien formalisé prêt pour la tournée des lits</p>
+              </div>
+              <button onclick="generateStaffReport()" class="px-3 py-1.5 bg-sky-600 text-white rounded-xl text-xs font-bold hover:bg-sky-700 shadow touch-btn">
+                <i class="fa-solid fa-rotate"></i> Actualiser la Fiche
+              </button>
+            </div>
+            <div id="staff-report-output" class="space-y-4 text-xs text-slate-700 font-normal">
+              <p class="text-slate-400 italic text-center py-6">Cliquez sur "Actualiser la Fiche" pour afficher la présentation rédigée du patient.</p>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <footer class="bg-white border-t border-slate-200 fixed bottom-0 left-0 right-0 z-30">
+      <div class="max-w-4xl mx-auto grid grid-cols-2 p-1.5 gap-1">
+        <button onclick="switchView('list')" id="nav-btn-list" class="py-2 flex flex-col items-center text-medical-600 font-bold text-xs rounded-xl hover:bg-slate-50">
+          <i class="fa-solid fa-list-ul text-base"></i>
+          <span>Patients</span>
+        </button>
+        <button onclick="startNewPatient()" id="nav-btn-new" class="py-2 flex flex-col items-center text-slate-500 font-medium text-xs rounded-xl hover:bg-slate-50">
+          <i class="fa-solid fa-circle-plus text-base"></i>
+          <span>Nouveau Dossier</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- TIROIR BRAINSTORMING IA -->
+  <div id="messenger-window" class="hidden fixed bottom-16 right-2 sm:right-6 z-50 w-[94vw] sm:w-[420px] h-[540px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden transition-all">
+    <div class="bg-gradient-to-r from-indigo-700 to-medical-700 p-3.5 text-white flex items-center justify-between shadow-md">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sky-200 text-lg">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-sm leading-tight">Brainstorming IA</h3>
+          <span class="text-[10px] text-sky-200 flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Assistant de Rédaction Clinique
+          </span>
+        </div>
+      </div>
+      <button onclick="toggleMessengerBubble()" class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center text-white transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <div id="chat-messages" class="flex-1 p-3 overflow-y-auto space-y-3 bg-slate-50 text-xs">
+      <div class="flex items-start gap-2">
+        <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">IA</div>
+        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 text-slate-700 max-w-[85%] leading-relaxed space-y-1">
+          <p class="font-semibold text-indigo-700">Bonjour Docteur ! 👋</p>
+          <p>Prêt à rédiger l'observation selon vos consignes strictes.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-2.5 bg-white border-t border-slate-200 flex items-center gap-2">
+      <textarea id="chat-input" rows="1" placeholder="Écrivez vos notes cliniques..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}" class="flex-1 p-2 bg-slate-100 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
+      <button onclick="sendMessage()" class="w-9 h-9 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center shadow transition touch-btn flex-shrink-0">
+        <i class="fa-solid fa-paper-plane text-sm"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCRIPT APPLICATION & FIREBASE -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      setDoc, 
+      deleteDoc, 
+      onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDIFxrQMQyx6sB9vvNPe1sTZeS1DMdbXvY",
+      authDomain: "pulse-77283.firebaseapp.com",
+      projectId: "pulse-77283",
+      storageBucket: "pulse-77283.firebasestorage.app",
+      messagingSenderId: "5062047853",
+      appId: "1:5062047853:web:1f2a8887f9fbf14619e764",
+      measurementId: "G-44W7SKHX93"
+    };
+
+    let app, auth, db;
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn("Mode local de secours activé :", e);
+    }
+
+    window.db = db;
+    window.auth = auth;
+    window.colRef = db ? collection(db, "patients_medobs") : null;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.deleteDoc = deleteDoc;
+
+    window.patients = JSON.parse(localStorage.getItem('medobs_patients_local') || '[]');
+    window.currentPatientId = null;
+
+    // Exposition globale des fonctions
+    window.handleLogin = handleLogin;
+    window.handleSignUp = handleSignUp;
+    window.handleLogout = handleLogout;
+    window.bypassAuth = bypassAuth;
+    window.toggleAutoPsyOM = toggleAutoPsyOM;
+    window.toggleAutoPsyEvo = toggleAutoPsyEvo;
+    window.toggleAutoPhyEvo = toggleAutoPhyEvo;
+    window.switchView = switchView;
+    window.switchFormTab = switchFormTab;
+    window.startNewPatient = startNewPatient;
+    window.saveCurrentPatient = saveCurrentPatient;
+    window.loadPatientIntoForm = loadPatientIntoForm;
+    window.deletePatient = deletePatient;
+    window.renderPatientsList = renderPatientsList;
+    window.addEvolutionEntry = addEvolutionEntry;
+    window.copyObservationForAI = copyObservationForAI;
+    window.copyEvolutionForAI = copyEvolutionForAI;
+    window.toggleMessengerBubble = toggleMessengerBubble;
+    window.sendMessage = sendMessage;
+    window.sendQuickPrompt = sendQuickPrompt;
+    window.generateObservationText = generateObservationText;
+    window.generateObservationWithAI = generateObservationWithAI;
+    window.generateEvolutionText = generateEvolutionText;
+    window.toggleToxDetails = toggleToxDetails;
+    window.checkToxNone = checkToxNone;
+    window.checkPsyNone = checkPsyNone;
+    window.checkMedNone = checkMedNone;
+    window.generateStaffReport = generateStaffReport;
+    window.addTag = addTag;
+    window.exportToWordDocx = exportToWordDocx;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updatePatientCount();
+      renderPatientsList();
+    });
+
+    let unsubscribeSnapshot = null;
+
+    if (auth) {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          if (window.colRef && !unsubscribeSnapshot) {
+            unsubscribeSnapshot = onSnapshot(window.colRef, (snapshot) => {
+              window.patients = [];
+              snapshot.forEach((docSnap) => {
+                window.patients.push({ id: docSnap.id, ...docSnap.data() });
+              });
+              localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
+              updatePatientCount();
+              renderPatientsList();
+            }, (err) => {
+              console.warn("Écoute Firestore en pause, utilisation du cache local.");
+            });
+          }
+        }
+      });
+    }
+
+    function bypassAuth() {
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('app-container').classList.remove('hidden');
+      showToast("Accès direct aux dossiers activé");
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const errorEl = document.getElementById('auth-error');
+      errorEl.classList.add('hidden');
+
+      try {
+        if (!auth) throw new Error("Auth non dispo");
+        await signInWithEmailAndPassword(auth, email, password);
+        bypassAuth();
+      } catch (err) {
+        errorEl.innerText = "Connexion impossible, mode local activé";
+        errorEl.classList.remove('hidden');
+        setTimeout(bypassAuth, 1000);
+      }
+    }
+
+    async function handleSignUp() {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const errorEl = document.getElementById('auth-error');
+      errorEl.classList.add('hidden');
+
+      if (password.length < 6) {
+        errorEl.innerText = "Le mot de passe doit contenir au moins 6 caractères";
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        if (!auth) throw new Error("Auth non dispo");
+        await createUserWithEmailAndPassword(auth, email, password);
+        bypassAuth();
+      } catch (err) {
+        errorEl.innerText = "Création impossible, mode local activé";
+        errorEl.classList.remove('hidden');
+        setTimeout(bypassAuth, 1000);
+      }
+    }
+
+    async function handleLogout() {
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+      if (auth) await signOut(auth);
+      document.getElementById('app-container').classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('hidden');
+    }
+
+    const evoDateEl = document.getElementById('evo-date-display');
+    if (evoDateEl) {
+      evoDateEl.innerText = new Date().toLocaleDateString('fr-FR');
+    }
+
+    function addTag(text) {
+      const textarea = document.getElementById('field-hdm');
+      if (textarea.value.length > 0) {
+        textarea.value += ', ' + text;
+      } else {
+        textarea.value = text;
+      }
+    }
+
+    function generateObservationText() {
+      const nom = document.getElementById('field-nom').value || '';
+      const prenom = document.getElementById('field-prenom').value || '';
+      const age = document.getElementById('field-age').value || '[Âge]';
+      const sexe = document.getElementById('field-sexe').value === 'M' ? 'Masculin (M)' : 'Féminin (F)';
+      const etatcivil = document.getElementById('field-etatcivil').value || '';
+      const profession = document.getElementById('field-profession').value || '';
+      const fratrie = document.getElementById('field-fratrie').value || '';
+      const origine = document.getElementById('field-origine').value || '';
+      const motif = document.getElementById('field-motif').value || '[Motif d\'hospitalisation]';
+      const biographie = document.getElementById('field-biographie').value || '';
+      const hdm = document.getElementById('field-hdm').value || '[Notes brutes de l\'HdM]';
+      const psy = document.getElementById('atcd-psy-free').value || 'Aucun ATCD psychiatrique particulier';
+      const tox = document.getElementById('atcd-tox-free').value || 'Aucune intoxication rapportée';
+      const med = document.getElementById('atcd-med-free').value || 'Aucun ATCD médical particulier';
+      const traitement = document.getElementById('field-traitement').value || 'Aucun traitement prescrit';
+
+      const getCheckedValues = (selector) => Array.from(document.querySelectorAll(selector + ':checked')).map(el => el.value);
+
+      const genText = [...getCheckedValues('.om-gen-chip'), document.getElementById('om-gen-free').value].filter(Boolean).join(' ') || 'Bon état général, apyrétique, absence de signes de déshydratation et de détresse respiratoire.';
+      const constantes = document.getElementById('om-constantes').value || 'Non renseignées';
+      const cardioText = [...getCheckedValues('.om-cardio-chip'), document.getElementById('om-cardio-free').value].filter(Boolean).join(' / ') || 'Absence de cyanose, absence de turgescence jugulaire, absence d\'œdèmes des membres inférieurs, choc de pointe palpable non dévié, B1/B2 réguliers sans souffle.';
+      const pulmoText = [...getCheckedValues('.om-pulmo-chip'), document.getElementById('om-pulmo-free').value].filter(Boolean).join(' / ') || 'Thorax symétrique, mouvements respiratoires réguliers et symétriques, murmure vésiculaire bien perçu et symétrique, sans râles.';
+      const abdoText = [...getCheckedValues('.om-abdo-chip'), document.getElementById('om-abdo-free').value].filter(Boolean).join(' / ') || 'Abdomen souple, indolore, sans masse palpable ni organomégalie.';
+      const neuroText = [...getCheckedValues('.om-neuro-chip'), document.getElementById('om-neuro-free').value].filter(Boolean).join(' / ') || 'Conscient, vigilant, bien orienté, Glasgow 15/15, paires crâniennes intactes, force musculaire conservée 5/5 MRC aux 4 membres, ROT présents et symétriques, Babinski absent, marche et coordination normales.';
+      const gangText = [...getCheckedValues('.om-gang-chip'), document.getElementById('om-gang-free').value].filter(Boolean).join(' / ') || 'Aires ganglionnaires libres, absence d\'adénopathies périphériques suspectes.';
+
+      const presText = [...getCheckedValues('.om-pres-chip'), document.getElementById('om-pres-free').value].filter(Boolean).join(', ');
+      const instText = [...getCheckedValues('.om-inst-chip'), document.getElementById('om-inst-free').value].filter(Boolean).join(', ');
+      const pensText = [...getCheckedValues('.om-pens-chip'), document.getElementById('om-pens-free').value].filter(Boolean).join(', ');
+      const affText = [...getCheckedValues('.om-aff-chip'), document.getElementById('om-aff-free').value].filter(Boolean).join(', ');
+
+      const draft = `OBSERVATION CLINIQUE EN PSYCHIATRIE
+
+1. IDENTITÉ
+- Nom & Prénom : ${nom} ${prenom}
+- Âge : ${age} ans | Sexe : ${sexe}
+- État civil : ${etatcivil} | Profession : ${profession}
+- Fratrie : ${fratrie} | Originaire de : ${origine}
+
+2. MOTIF D'HOSPITALISATION
+> ${motif}
+
+3. ANTÉCÉDENTS (ATCD)
+- Psychiatriques : ${psy}
+- Habitudes toxiques : ${tox}
+- Médicaux : ${med}
+
+4. BIOGRAPHIE & PARCOURS DE VIE
+${biographie}
+
+5. HISTOIRE DE LA MALADIE (HDM)
+${hdm}
+
+6. EXAMEN PHYSIQUE & SOMATIQUE
+- État général : ${genText}
+  -> Conclusion : Patient en bon état général, stable.
+- Constantes Vitales : ${constantes}
+- Appareil Cardiovasculaire : ${cardioText}
+  -> Conclusion : Examen cardiovasculaire sans particularité.
+- Appareil Pleuropulmonaire : ${pulmoText}
+  -> Conclusion : Appareil pleuropulmonaire libre et sain.
+- Appareil Abdominal : ${abdoText}
+  -> Conclusion : Examen abdominal normal, souple et indolore.
+- Examen Neurologique : ${neuroText}
+  -> Conclusion : Examen neurologique strictly normal, pas de déficit focal.
+- Aires Ganglionnaires : ${gangText}
+  -> Conclusion : Aires ganglionnaires libres.
+
+7. EXAMEN PSYCHIATRIQUE INITIAL (OM)
+- Présentation / Contact : ${presText}
+- Conduites instinctuelles : ${instText}
+- Fonctions supérieures & Pensée : ${pensText}
+- Affects & Humeur : ${affText}
+
+8. TRAITEMENT PRESCRIT
+${traitement}`;
+      
+      document.getElementById('field-obs-medicale').value = draft;
+      showToast("Observation médicale locale générée !");
+    }
+
+    // ==========================================
+    // FONCTION UNIVERSELLE MULTI-FOURNISSEURS IA
+    // ==========================================
+    async function callSelectedAIProvider(promptSystem, promptUser) {
+      const apiKey = document.getElementById('openrouter-api-key').value.trim();
+      const selection = document.getElementById('openrouter-model').value;
+      const [provider, model] = selection.includes('|') ? selection.split('|') : ['openrouter', selection];
+
+      if (!apiKey) {
+        throw new Error("Veuillez saisir votre clé API dans le champ en haut de la page.");
+      }
+
+      let url = "";
+      let headers = { "Content-Type": "application/json" };
+      let body = {};
+
+      if (provider === "google") {
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        body = {
+          systemInstruction: { parts: [{ text: promptSystem }] },
+          contents: [{ parts: [{ text: promptUser }] }],
+          generationConfig: { temperature: 0.2 }
+        };
+      } else {
+        headers["Authorization"] = `Bearer ${apiKey}`;
+        body = {
+          model: model,
+          messages: [
+            { role: "system", content: promptSystem },
+            { role: "user", content: promptUser }
+          ],
+          temperature: 0.2
+        };
+
+        if (provider === "openrouter") {
+          url = "https://openrouter.ai/api/v1/chat/completions";
+          headers["HTTP-Referer"] = window.location.origin;
+          headers["X-Title"] = "MedObs Hospital";
+        } else if (provider === "groq") {
+          url = "https://api.groq.com/openai/v1/chat/completions";
+        } else if (provider === "mistral") {
+          url = "https://api.mistral.ai/v1/chat/completions";
+        }
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || `Erreur API HTTP ${response.status}`);
+      }
+
+      let aiText = "";
+      if (provider === "google") {
+        aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      } else {
+        aiText = data.choices?.[0]?.message?.content || "";
+      }
+
+      if (!aiText) {
+        throw new Error("Réponse vide ou format inattendu de l'API.");
+      }
+
+      return aiText.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
+    }
+
+    // ==========================================
+    // APPEL DIRECT CLIENT-SIDE (GOOGLE / OPENROUTER / GROQ / MISTRAL)
+    // ==========================================
+    async function generateObservationWithAI() {
+      const apiKey = document.getElementById('openrouter-api-key').value.trim();
+      const selection = document.getElementById('openrouter-model').value;
+      const [provider, model] = selection.includes('|') ? selection.split('|') : ['openrouter', selection];
+
+      if (!apiKey) {
+        alert("Veuillez saisir votre clé API dans le champ en haut de la page.");
+        return;
+      }
+
+      showToast(`Génération avec ${model} (${provider})...`);
+
+      const getCheckedValues = (selector) => Array.from(document.querySelectorAll(selector + ':checked')).map(el => el.value);
+
+      const formData = {
+        nom: document.getElementById('field-nom').value,
+        prenom: document.getElementById('field-prenom').value,
+        age: document.getElementById('field-age').value,
+        sexe: document.getElementById('field-sexe').value,
+        etatcivil: document.getElementById('field-etatcivil').value,
+        profession: document.getElementById('field-profession').value,
+        motif: document.getElementById('field-motif').value,
+        biographie: document.getElementById('field-biographie').value,
+        hdmBrut: document.getElementById('field-hdm').value,
+        atcdPsy: [...getCheckedValues('.atcd-psy-chip'), document.getElementById('atcd-psy-free').value].filter(Boolean).join(', '),
+        atcdTox: [...getCheckedValues('.atcd-tox-chip'), document.getElementById('atcd-tox-free').value].filter(Boolean).join(', '),
+        atcdMed: [...getCheckedValues('.atcd-med-chip'), document.getElementById('atcd-med-free').value].filter(Boolean).join(', '),
+        constantes: document.getElementById('om-constantes').value,
+        examenPhy: [
+          ...getCheckedValues('.om-gen-chip'), document.getElementById('om-gen-free').value,
+          ...getCheckedValues('.om-cardio-chip'), document.getElementById('om-cardio-free').value,
+          ...getCheckedValues('.om-pulmo-chip'), document.getElementById('om-pulmo-free').value,
+          ...getCheckedValues('.om-abdo-chip'), document.getElementById('om-abdo-free').value,
+          ...getCheckedValues('.om-neuro-chip'), document.getElementById('om-neuro-free').value,
+          ...getCheckedValues('.om-gang-chip'), document.getElementById('om-gang-free').value
+        ].filter(Boolean).join(' '),
+        examenPsy: [
+          ...getCheckedValues('.om-pres-chip'), document.getElementById('om-pres-free').value,
+          ...getCheckedValues('.om-inst-chip'), document.getElementById('om-inst-free').value,
+          ...getCheckedValues('.om-pens-chip'), document.getElementById('om-pens-free').value,
+          ...getCheckedValues('.om-aff-chip'), document.getElementById('om-aff-free').value
+        ].filter(Boolean).join(', '),
+        traitement: document.getElementById('field-traitement').value
+      };
+
+      const promptSystem = `Tu es un assistant clinicien senior expert en psychiatrie et neurologie. 
+Rédige une observation médicale hospitalière formelle, académique et parfaitement structurée.
+Consignes strictes :
+- Ne mets AUCUNE introduction ou formule de politesse (ex: "Voici l'observation...").
+- Ne mets AUCUNE balise de code Markdown au début ou à la fin (pas de \`\`\`markdown).
+- Suis rigoureusement le plan en 8 sections (1. Identité, 2. Motif, 3. ATCD, 4. Biographie, 5. Histoire de la maladie (ordre rétrograde), 6. Examen physique par appareil avec conclusions, 7. Examen psychiatrique OM, 8. Traitement).`;
+
+      const promptUser = `Données brutes du patient à traiter :
+- Nom/Prénom/Âge/Sexe : ${formData.nom} ${formData.prenom}, ${formData.age}, ${formData.sexe}
+- État civil / Profession : ${formData.etatcivil} / ${formData.profession}
+- Motif : ${formData.motif}
+- Biographie : ${formData.biographie}
+- Notes HdM : ${formData.hdmBrut}
+- ATCD : Psy(${formData.atcdPsy}), Tox(${formData.atcdTox}), Médical(${formData.atcdMed})
+- Constantes : ${formData.constantes}
+- Examen physique relevé : ${formData.examenPhy}
+- Examen psychiatrique relevé : ${formData.examenPsy}
+- Traitement : ${formData.traitement}`;
+
+      try {
+        const aiText = await callSelectedAIProvider(promptSystem, promptUser);
+        document.getElementById('field-obs-medicale').value = aiText;
+        showToast(`Observation complète générée via ${model} !`);
+      } catch (err) {
+        console.error("AI Error:", err);
+        alert("Erreur détaillée : " + (err.message || JSON.stringify(err)));
+      }
+    }
+
+    async function exportToWordDocx() {
+      generateObservationText();
+      const nom = document.getElementById('field-nom').value || 'Patient';
+      const prenom = document.getElementById('field-prenom').value || '';
+      const obsContent = document.getElementById('field-obs-medicale').value;
+
+      if (!window.docx) {
+        alert("La bibliothèque d'exportation Word n'est pas chargée.");
+        return;
+      }
+
+      try {
+        const { Document, Packer, Paragraph, HeadingLevel, AlignmentType } = window.docx;
+        const lines = obsContent.split('\n');
+        const children = [
+          new Paragraph({
+            text: "OBSERVATION CLINIQUE EN PSYCHIATRIE",
+            heading: HeadingLevel.TITLE,
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 300 }
+          })
+        ];
+
+        for (let line of lines) {
+          if (line.match(/^[0-9]+\./)) {
+            children.push(new Paragraph({ text: line, heading: HeadingLevel.HEADING_1, spacing: { before: 200, after: 100 } }));
+          } else {
+            children.push(new Paragraph({ text: line, spacing: { after: 100 } }));
+          }
+        }
+
+        const doc = new Document({ sections: [{ properties: {}, children: children }] });
+        const blob = await Packer.toBlob(doc);
+        saveAs(blob, `Observation_${nom}_${prenom}.docx`);
+        showToast("Fichier Word (.docx) téléchargé avec succès !");
+      } catch (err) {
+        console.error(err);
+        alert("Erreur lors de l'export Word : " + err.message);
+      }
+    }
+
+    function generateEvolutionText() {
+      const jour = document.getElementById('evo-jour-tag').value || "J d'hospitalisation";
+      const resume = document.getElementById('evo-resume-text').value || "État clinique stable";
+      const cat = document.getElementById('evo-cat-text').value || "Poursuite de la prise en charge";
+      const evolutionDraft = `${jour} :\n- Résumé : ${resume}.\n- CAT : ${cat}.`;
+      document.getElementById('evo-presentation-text').value = evolutionDraft;
+      showToast("Présentation de l'évolution générée !");
+    }
+
+    function toggleToxDetails() {
+      const checkedTox = document.querySelectorAll('.atcd-tox-chip:checked');
+      document.getElementById('tox-extra-fields').classList.toggle('hidden', checkedTox.length === 0);
+    }
+    function checkToxNone(cb) { if(cb.checked) { document.querySelectorAll('.atcd-tox-chip').forEach(c => c.checked = false); document.getElementById('tox-extra-fields').classList.add('hidden'); } }
+    function checkPsyNone(cb) { if(cb.checked) document.querySelectorAll('.atcd-psy-chip').forEach(c => c.checked = false); }
+    function checkMedNone(cb) { if(cb.checked) document.querySelectorAll('.atcd-med-chip').forEach(c => c.checked = false); }
+    function toggleAutoPsyOM(cb) { document.querySelectorAll('.om-pres-chip, .om-inst-chip, .om-pens-chip, .om-aff-chip').forEach(c => c.checked = cb.checked); }
+    function toggleAutoPsyEvo(cb) { document.querySelectorAll('.evo-pres-chip, .evo-inst-chip, .evo-pens-chip, .evo-aff-chip').forEach(c => c.checked = cb.checked); }
+    function toggleAutoPhyEvo(cb) { document.querySelectorAll('.evo-phy-chip').forEach(c => c.checked = cb.checked); }
+
+    function switchView(viewName) {
+      document.getElementById('view-list').classList.toggle('hidden', viewName !== 'list');
+      document.getElementById('view-form').classList.toggle('hidden', viewName !== 'form');
+    }
+
+    function switchFormTab(tab) {
+      document.getElementById('tab-content-obs').classList.toggle('hidden', tab !== 'obs');
+      document.getElementById('tab-content-evo').classList.toggle('hidden', tab !== 'evo');
+      document.getElementById('tab-content-fiche').classList.toggle('hidden', tab !== 'fiche');
+      
+      document.getElementById('tab-btn-obs').className = tab === 'obs' ? "py-2 rounded-lg text-center bg-white text-medical-700 font-bold shadow" : "py-2 rounded-lg text-center text-slate-600 hover:text-slate-900 font-semibold";
+      document.getElementById('tab-btn-evo').className = tab === 'evo' ? "py-2 rounded-lg text-center bg-white text-medical-700 font-bold shadow" : "py-2 rounded-lg text-center text-slate-600 hover:text-slate-900 font-semibold";
+      document.getElementById('tab-btn-fiche').className = tab === 'fiche' ? "py-2 rounded-lg text-center bg-white text-medical-700 font-bold shadow" : "py-2 rounded-lg text-center text-slate-600 hover:text-slate-900 font-semibold";
+      if(tab === 'fiche') generateStaffReport();
+    }
+
+    function startNewPatient() {
+      window.currentPatientId = 'patient_' + Date.now();
+      document.querySelectorAll('#view-form input, #view-form textarea').forEach(el => {
+        if (el.type === 'checkbox') el.checked = false;
+        else if (el.id !== 'openrouter-api-key') el.value = '';
+      });
+      document.getElementById('field-sexe').value = 'M';
+      document.getElementById('field-nationalite').value = 'Malagasy';
+      updateFormHeader("Nouveau Patient", "Observation Clinique & Sémiologique");
+      renderEvolutionsList([]);
+      switchView('form');
+      switchFormTab('obs');
+    }
+
+    async function saveCurrentPatient() {
+      const nom = document.getElementById('field-nom').value.trim() || 'Patient';
+      const prenom = document.getElementById('field-prenom').value.trim() || '';
+      const motif = document.getElementById('field-motif').value.trim() || 'Sans motif';
+      const pId = window.currentPatientId || ('patient_' + Date.now());
+      window.currentPatientId = pId;
+      const existingPatient = window.patients.find(p => p.id === pId);
+
+      generateObservationText();
+
+      const patientData = {
+        id: pId,
+        nom: nom,
+        prenom: prenom,
+        age: document.getElementById('field-age').value,
+        sexe: document.getElementById('field-sexe').value,
+        etatcivil: document.getElementById('field-etatcivil').value,
+        profession: document.getElementById('field-profession').value,
+        motif: motif,
+        biographie: document.getElementById('field-biographie').value,
+        hdm: document.getElementById('field-hdm').value,
+        obs_medicale: document.getElementById('field-obs-medicale').value,
+        traitement: document.getElementById('field-traitement').value,
+        updatedAt: new Date().toISOString(),
+        evolutions: existingPatient ? (existingPatient.evolutions || []) : []
+      };
+
+      const idx = window.patients.findIndex(p => p.id === pId);
+      if (idx >= 0) window.patients[idx] = patientData;
+      else window.patients.push(patientData);
+      
+      localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
+      updatePatientCount();
+      renderPatientsList();
+      showToast("Dossier enregistré !");
+      switchView('list');
+
+      if (db && window.colRef) {
+        try {
+          await setDoc(doc(doc(db, "patients_medobs"), pId), patientData, { merge: true });
+        } catch (e) {
+          console.warn("Écriture Cloud échouée :", e);
+        }
+      }
+    }
+
+    function loadPatientIntoForm(patientId) {
+      const p = window.patients.find(p => p.id === patientId);
+      if (!p) return;
+      window.currentPatientId = p.id;
+
+      document.getElementById('field-nom').value = p.nom || '';
+      document.getElementById('field-prenom').value = p.prenom || '';
+      document.getElementById('field-age').value = p.age || '';
+      document.getElementById('field-sexe').value = p.sexe || 'M';
+      document.getElementById('field-etatcivil').value = p.etatcivil || '';
+      document.getElementById('field-profession').value = p.profession || '';
+      document.getElementById('field-motif').value = p.motif || '';
+      document.getElementById('field-biographie').value = p.biographie || '';
+      document.getElementById('field-hdm').value = p.hdm || '';
+      document.getElementById('field-obs-medicale').value = p.obs_medicale || '';
+      document.getElementById('field-traitement').value = p.traitement || '';
+
+      updateFormHeader(`${p.nom || 'Patient'} ${p.prenom || ''}`, p.motif || '');
+      renderEvolutionsList(p.evolutions || []);
+      switchView('form');
+      switchFormTab('obs');
+    }
+
+    async function deletePatient(patientId, event) {
+      event.stopPropagation();
+      if (confirm("Supprimer ce dossier ?")) {
+        try {
+          if (db) await deleteDoc(doc(db, "patients_medobs", patientId));
+        } catch(e) {}
+        window.patients = window.patients.filter(p => p.id !== patientId);
+        localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
+        updatePatientCount();
+        renderPatientsList();
+        showToast("Dossier supprimé");
+      }
+    }
+
+    function updateFormHeader(title, subtitle) {
+      document.getElementById('display-patient-name').innerText = title;
+      document.getElementById('display-patient-info').innerText = subtitle;
+    }
+
+    function updatePatientCount() {
+      document.getElementById('patient-count').innerText = window.patients.length;
+    }
+
+    function renderPatientsList() {
+      const container = document.getElementById('patients-container');
+      const searchQuery = (document.getElementById('search-patient')?.value || '').toLowerCase();
+      const filtered = window.patients.filter(p => 
+        (p.nom && p.nom.toLowerCase().includes(searchQuery)) || 
+        (p.prenom && p.prenom.toLowerCase().includes(searchQuery)) || 
+        (p.motif && p.motif.toLowerCase().includes(searchQuery))
+      );
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 bg-white rounded-2xl border border-dashed p-6"><p class="text-sm font-semibold text-slate-500">Aucun patient enregistré</p></div>`;
+        return;
+      }
+      container.innerHTML = filtered.map(p => `
+        <div onclick="loadPatientIntoForm('${p.id}')" class="bg-white p-3.5 rounded-2xl border shadow-sm hover:border-sky-400 transition cursor-pointer flex items-center justify-between touch-btn">
+          <div>
+            <h4 class="font-bold text-slate-800 text-sm">${p.nom || 'Patient'} ${p.prenom || ''} (${p.age || '?'} ans)</h4>
+            <p class="text-xs text-slate-600 line-clamp-1">${p.motif || 'Sans motif'}</p>
+          </div>
+          <button onclick="deletePatient('${p.id}', event)" class="p-2 text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash-can text-sm"></i></button>
+        </div>
+      `).join('');
+    }
+
+    async function addEvolutionEntry() {
+      if (!window.currentPatientId) return;
+      const p = window.patients.find(p => p.id === window.currentPatientId);
+      if (!p) return;
+
+      const evoData = {
+        date: new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}),
+        jour: document.getElementById('evo-jour-tag').value.trim() || "J2 d'hospitalisation",
+        resume: document.getElementById('evo-resume-text').value.trim(),
+        presentation: document.getElementById('evo-presentation-text').value.trim(),
+        cat: document.getElementById('evo-cat-text').value.trim()
+      };
+
+      const updatedEvolutions = [evoData, ...(p.evolutions || [])];
+
+      try {
+        if (db) await setDoc(doc(db, "patients_medobs", window.currentPatientId), { evolutions: updatedEvolutions }, { merge: true });
+      } catch(e) {}
+
+      p.evolutions = updatedEvolutions;
+      localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
+      showToast("Évolution enregistrée !");
+      renderEvolutionsList(updatedEvolutions);
+    }
+
+    function renderEvolutionsList(evos) {
+      document.getElementById('evo-count').innerText = evos ? evos.length : 0;
+      const container = document.getElementById('evo-history-list');
+      if (!evos || evos.length === 0) {
+        container.innerHTML = `<div class="text-center py-4 text-xs text-slate-400 bg-white rounded-xl border">Aucune évolution enregistrée</div>`;
+        return;
+      }
+      container.innerHTML = evos.map(e => `
+        <div class="bg-white p-3 rounded-xl border space-y-1 text-xs">
+          <div class="font-bold text-medical-700">${e.jour} - ${e.date}</div>
+          ${e.presentation ? `<p class="bg-sky-50 p-2 rounded text-slate-800 font-mono"><strong>Présentation :</strong> ${e.presentation}</p>` : ''}
+          ${e.resume ? `<p><strong>Résumé :</strong> ${e.resume}</p>` : ''}
+          ${e.cat ? `<p><strong>CAT :</strong> ${e.cat}</p>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function generateStaffReport() {
+      generateObservationText();
+      const nom = document.getElementById('field-nom').value || 'Patient';
+      const obsMed = document.getElementById('field-obs-medicale').value || '';
+      const traitement = document.getElementById('field-traitement').value || '';
+
+      const output = `
+        <div class="space-y-4 text-slate-800 text-xs font-mono bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <p><strong>- Dossier patient : ${nom}</strong></p>
+          <div>
+            <p class="font-bold text-medical-700 underline">- Synthèse de l'Observation Médicale :</p>
+            <p class="whitespace-pre-line">${obsMed}</p>
+          </div>
+          <div>
+            <p class="font-bold text-medical-700 underline">- Traitement :</p>
+            <p class="whitespace-pre-line">${traitement}</p>
+          </div>
+        </div>
+      `;
+      document.getElementById('staff-report-output').innerHTML = output;
+      showToast("Fiche d'évolution actualisée !");
+    }
+
+    function copyObservationForAI() {
+      generateObservationText();
+      const obsVal = document.getElementById('field-obs-medicale').value;
+      navigator.clipboard.writeText(obsVal).then(() => showToast("📋 Observation copiée !"));
+    }
+
+    function copyEvolutionForAI() {
+      const evoText = document.getElementById('evo-presentation-text').value;
+      navigator.clipboard.writeText(evoText).then(() => showToast("📋 Évolution copiée !"));
+    }
+
+    function toggleMessengerBubble() {
+      document.getElementById('messenger-window').classList.toggle('hidden');
+    }
+
+    function sendQuickPrompt(text) {
+      document.getElementById('chat-input').value = text;
+      sendMessage();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      const chatContainer = document.getElementById('chat-messages');
+      const safeUserText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+      chatContainer.innerHTML += `<div class="flex items-start justify-end gap-2"><div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-sm max-w-[85%]">${safeUserText}</div></div>`;
+      input.value = '';
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      const loadingId = 'ai-loading-' + Date.now();
+      chatContainer.innerHTML += `<div id="${loadingId}" class="flex items-start gap-2"><div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">IA</div><div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 text-slate-400 italic max-w-[85%]">Rédaction en cours...</div></div>`;
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      try {
+        const reply = await callSelectedAIProvider(
+          "Tu es un assistant clinicien senior expert en psychiatrie et neurologie. Réponds de manière précise, structurée et concise en français.",
+          text
+        );
+        const safeReply = reply.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+        const loader = document.getElementById(loadingId);
+        if (loader) {
+          loader.innerHTML = `<div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">IA</div><div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 text-slate-700 max-w-[85%] leading-relaxed">${safeReply}</div>`;
+        }
+      } catch (err) {
+        const loader = document.getElementById(loadingId);
+        if (loader) {
+          loader.innerHTML = `<div class="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">!</div><div class="bg-rose-50 p-3 rounded-2xl shadow-sm border border-rose-200 text-rose-700 max-w-[85%]">${err.message}</div>`;
+        }
+      }
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      document.getElementById('toast-text').innerText = msg;
+      t.classList.add('flex');
+      t.classList.remove('hidden');
+      setTimeout(() => {
+        t.classList.remove('flex');
+        t.classList.add('hidden');
+      }, 2500);
+    }
+  </script>
 </body>
 </html>
