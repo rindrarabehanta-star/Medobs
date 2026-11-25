@@ -557,17 +557,17 @@
 
             <div class="tags-group flex flex-wrap gap-1.5 items-center">
               <span class="tag-title text-xs font-bold text-slate-500 w-full">Sommeil & Comportement :</span>
-              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Insomnie d'endormissement')">+ Insomnie d'endormissement</button>
-              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Insomnie totale')">+ Insomnie totale</button>
-              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Fatigue au réveil')">+ Fatigue au réveil</button>
-              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Déambulation et propos inintelligibles')">+ Déambulation / Propos inintelligibles</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag(&quot;Insomnie d'endormissement&quot;)">+ Insomnie d'endormissement</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag(&quot;Insomnie totale&quot;)">+ Insomnie totale</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag(&quot;Fatigue au réveil&quot;)">+ Fatigue au réveil</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag(&quot;Déambulation et propos inintelligibles&quot;)">+ Déambulation / Propos inintelligibles</button>
             </div>
 
             <div class="tags-group flex flex-wrap gap-1.5 items-center mt-2">
               <span class="tag-title text-xs font-bold text-slate-500 w-full">Somatique, Instinctuel & Traitement :</span>
-              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Appétit conservé')">+ Appétit conservé</button>
-              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Sans fièvre')">+ Sans fièvre</button>
-              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Aucun traitement reçu au préalable')">+ Aucun traitement reçu</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag(&quot;Appétit conservé&quot;)">+ Appétit conservé</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag(&quot;Sans fièvre&quot;)">+ Sans fièvre</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag(&quot;Aucun traitement reçu au préalable&quot;)">+ Aucun traitement reçu</button>
             </div>
 
             <textarea id="field-hdm" rows="4" placeholder="Tapez les notes brutes / mots-clés de l'HdM ici..." class="w-full p-2.5 border rounded-xl bg-slate-50 text-xs mt-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
@@ -994,8 +994,7 @@
       onSnapshot,
       query,
       where,
-      getDocs,
-      arrayUnion
+      getDocs
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -1032,7 +1031,7 @@
     ];
     window.currentPatientId = null;
     window.selectedRoomPatientId = null;
-    window.selectedBedSlot = null; // { roomName, bedName }
+    window.selectedBedSlot = null;
     window.roomFilter = 'all';
 
     // Exposition globale des fonctions
@@ -1377,7 +1376,7 @@ Conclusion :
 - pronostic : `;
 
     // =========================================================================
-    // EXEMPLES FEW-SHOT POUR L'IA (VOUS POUVEZ AJOUTER D'AUTRES EXEMPLES ICI)
+    // EXEMPLES FEW-SHOT POUR L'IA
     // =========================================================================
     const AI_FEW_SHOT_EXAMPLES = [
       {
@@ -1415,22 +1414,10 @@ RÈGLES ABSOLUES À RESPECTER :
 
         buildUserPrompt: (formData, filledSkeleton) => {
           const formattedExamples = AI_FEW_SHOT_EXAMPLES.map((ex) =>
-            `--- ${ex.titre} ---
-Notes/Mots-clés : ${ex.entree_mots_cles}
-Rédaction attendue :
-${ex.sortie_attendue}`
-          ).join('
+            `--- ${ex.titre} ---\nNotes/Mots-clés : ${ex.entree_mots_cles}\nRédaction attendue :\n${ex.sortie_attendue}`
+          ).join('\n\n');
 
-');
-
-          return `EXEMPLES DE RÉFÉRENCE POUR LE STYLE DE RÉDACTION :
-${formattedExamples}
-
-SQUELETTE DE RÉFÉRENCE :
-${filledSkeleton}
-
-DONNÉES BRUTES DU PATIENT :
-${JSON.stringify(formData, null, 2)}`;
+          return `EXEMPLES DE RÉFÉRENCE POUR LE STYLE DE RÉDACTION :\n${formattedExamples}\n\nSQUELETTE DE RÉFÉRENCE :\n${filledSkeleton}\n\nDONNÉES BRUTES DU PATIENT :\n${JSON.stringify(formData, null, 2)}`;
         }
       }
     };
@@ -1532,16 +1519,150 @@ ${JSON.stringify(formData, null, 2)}`;
     }
 
     // ==========================================
-    // FONCTION UNIVERSELLE MULTI-FOURNISSEURS IA
+    // FONCTION UNIVERSELLE MULTI-FOURNISSEURS IA (AVEC RETRY & FALLBACK)
     // ==========================================
+    const GOOGLE_FALLBACK_MODELS = [
+      "gemini-3.5-flash-lite",
+      "gemini-3.6-flash",
+      "gemini-3.8-flash",
+      "gemma-4"
+    ];
+
+    const OPENROUTER_FALLBACK_MODELS = [
+      "openrouter/free",
+      "meta-llama/llama-3.3-70b-instruct:free",
+      "deepseek/deepseek-r1:free"
+    ];
+
+    function isHighDemandError(message) {
+      const msg = String(message || "").toLowerCase();
+      return (
+        msg.includes("high demand") ||
+        msg.includes("overloaded") ||
+        msg.includes("temporarily unavailable") ||
+        msg.includes("resource exhausted") ||
+        msg.includes("rate limit") ||
+        msg.includes("503") ||
+        msg.includes("429")
+      );
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function callSingleModelEndpoint(apiKey, provider, model, promptSystem, promptUser) {
+      let url = "";
+      let headers = { "Content-Type": "application/json" };
+      let body = {};
+
+      if (provider === "google") {
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        body = {
+          systemInstruction: { parts: [{ text: promptSystem }] },
+          contents: [{ parts: [{ text: promptUser }] }],
+          generationConfig: { temperature: 0.2 }
+        };
+      } else {
+        headers["Authorization"] = `Bearer ${apiKey}`;
+        body = {
+          model: model,
+          messages: [
+            { role: "system", content: promptSystem },
+            { role: "user", content: promptUser }
+          ],
+          temperature: 0.2
+        };
+
+        if (provider === "openrouter") {
+          url = "https://openrouter.ai/api/v1/chat/completions";
+          headers["HTTP-Referer"] = window.location.origin;
+          headers["X-Title"] = "MedObs Hospital";
+        } else if (provider === "groq") {
+          url = "https://api.groq.com/openai/v1/chat/completions";
+        } else if (provider === "mistral") {
+          url = "https://api.mistral.ai/v1/chat/completions";
+        } else {
+          throw new Error(`Fournisseur IA non pris en charge : ${provider}`);
+        }
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const apiMsg = data.error?.message || `Erreur API HTTP ${response.status}`;
+        const err = new Error(apiMsg);
+        err.status = response.status;
+        err.retryable = isHighDemandError(apiMsg) || response.status === 503 || response.status === 429 || response.status >= 500;
+        throw err;
+      }
+
+      let aiText = "";
+      if (provider === "google") {
+        aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      } else {
+        aiText = data.choices?.[0]?.message?.content || "";
+      }
+
+      if (!aiText) {
+        throw new Error("Réponse vide ou format inattendu de l'API.");
+      }
+
+      return aiText.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/i, "").replace(/\[À renseigner\]/gi, "").trim();
+    }
+
     async function callSelectedAIProvider(promptSystem, promptUser) {
-      const apiKey = document.getElementById('openrouter-api-key').value.trim();
-      const selection = document.getElementById('openrouter-model').value;
-      const [provider, model] = selection.includes('|') ? selection.split('|') : ['openrouter', selection];
+      const apiKey = document.getElementById("openrouter-api-key").value.trim();
+      const selection = document.getElementById("openrouter-model").value;
+      const [provider, primaryModel] = selection.includes("|") ? selection.split("|") : ["openrouter", selection];
 
       if (!apiKey) {
         throw new Error("Veuillez saisir votre clé API dans le champ en haut de la page.");
       }
+
+      let candidateModels = [primaryModel];
+      if (provider === "google") {
+        candidateModels = [primaryModel, ...GOOGLE_FALLBACK_MODELS.filter((m) => m !== primaryModel)];
+      } else if (provider === "openrouter") {
+        candidateModels = [primaryModel, ...OPENROUTER_FALLBACK_MODELS.filter((m) => m !== primaryModel)];
+      }
+
+      let lastError = null;
+
+      for (let mIdx = 0; mIdx < candidateModels.length; mIdx++) {
+        const currentModel = candidateModels[mIdx];
+        const maxRetriesPerModel = mIdx === 0 ? 3 : 2;
+
+        for (let attempt = 1; attempt <= maxRetriesPerModel; attempt++) {
+          try {
+            return await callSingleModelEndpoint(apiKey, provider, currentModel, promptSystem, promptUser);
+          } catch (err) {
+            lastError = err;
+            const canRetry = Boolean(err.retryable) || isHighDemandError(err.message);
+            if (!canRetry) {
+              throw err;
+            }
+            if (attempt < maxRetriesPerModel) {
+              const backoffMs = Math.min(800 * Math.pow(2, attempt - 1), 4000) + Math.floor(Math.random() * 250);
+              showToast(`Modèle occupé (${currentModel}), nouvelle tentative (${attempt}/${maxRetriesPerModel})...`);
+              await sleep(backoffMs);
+            }
+          }
+        }
+
+        if (mIdx < candidateModels.length - 1) {
+          showToast(`Bascule automatique vers ${candidateModels[mIdx + 1]}...`);
+        }
+      }
+
+      throw lastError || new Error("Le service IA est temporairement surchargé. Veuillez réessayer dans quelques instants.");
+    }
 
       let url = "";
       let headers = { "Content-Type": "application/json" };
@@ -1599,9 +1720,7 @@ ${JSON.stringify(formData, null, 2)}`;
         throw new Error("Réponse vide ou format inattendu de l'API.");
       }
 
-      return aiText.replace(/^```[a-z]*
-?/i, '').replace(/
-?```$/i, '').replace(/\[À renseigner\]/gi, '').trim();
+      return aiText.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').replace(/\[À renseigner\]/gi, '').trim();
     }
 
     // ==========================================
@@ -1613,7 +1732,7 @@ ${JSON.stringify(formData, null, 2)}`;
       const [provider, model] = selection.includes('|') ? selection.split('|') : ['openrouter', selection];
 
       if (!apiKey) {
-        alert("Veuillez saisir votre clé API dans le champ en haut de la page.");
+        showToast("Veuillez saisir votre clé API en haut de la page.");
         return;
       }
 
@@ -1631,7 +1750,7 @@ ${JSON.stringify(formData, null, 2)}`;
         showToast(`Observation complète générée via ${model} !`);
       } catch (err) {
         console.error("AI Error:", err);
-        alert("Erreur détaillée : " + (err.message || JSON.stringify(err)));
+        showToast("Erreur API : " + (err.message || "Vérifiez votre clé"));
       }
     }
 
@@ -1642,22 +1761,19 @@ ${JSON.stringify(formData, null, 2)}`;
       const currentPres = document.getElementById('evo-presentation-text').value.trim();
       const rawNotes = [jour, resume, currentPres, cat].filter(Boolean).join(" | ");
       if (!rawNotes) {
-        alert("Saisissez au moins quelques mots-clés d'évolution avant de lancer l'IA.");
+        showToast("Saisissez d'abord quelques mots-clés d'évolution.");
         return;
       }
       showToast("Rédaction de l'évolution par l'IA...");
       try {
         const aiEvo = await callSelectedAIProvider(
           "Tu es un assistant clinicien senior en psychiatrie et neurologie. Rédige une évolution journalière hospitalière concise, claire et structurée en français à partir des notes fournies.",
-          `Jour : ${jour || "Non précisé"}
-Résumé : ${resume || "Non précisé"}
-Notes : ${currentPres || resume}
-CAT : ${cat || "À préciser"}`
+          `Jour : ${jour || "Non précisé"}\nRésumé : ${resume || "Non précisé"}\nNotes : ${currentPres || resume}\nCAT : ${cat || "À préciser"}`
         );
         document.getElementById('evo-presentation-text').value = aiEvo;
         showToast("Évolution rédigée par l'IA !");
       } catch (err) {
-        alert("Erreur IA Évolution : " + err.message);
+        showToast("Erreur IA Évolution : " + err.message);
       }
     }
 
@@ -1670,14 +1786,13 @@ CAT : ${cat || "À préciser"}`
       const obsContent = document.getElementById('field-obs-medicale').value;
 
       if (!window.docx) {
-        alert("La bibliothèque d'exportation Word n'est pas chargée.");
+        showToast("Bibliothèque Word non chargée.");
         return;
       }
 
       try {
         const { Document, Packer, Paragraph, HeadingLevel, AlignmentType } = window.docx;
-        const lines = obsContent.split('
-');
+        const lines = obsContent.split('\n');
         const children = [
           new Paragraph({
             text: "OBSERVATION CLINIQUE EN PSYCHIATRIE",
@@ -1701,7 +1816,7 @@ CAT : ${cat || "À préciser"}`
         showToast("Fichier Word (.docx) téléchargé avec succès !");
       } catch (err) {
         console.error(err);
-        alert("Erreur lors de l'export Word : " + err.message);
+        showToast("Erreur export Word : " + err.message);
       }
     }
 
@@ -1709,9 +1824,7 @@ CAT : ${cat || "À préciser"}`
       const jour = document.getElementById('evo-jour-tag').value || "J d'hospitalisation";
       const resume = document.getElementById('evo-resume-text').value || "État clinique stable";
       const cat = document.getElementById('evo-cat-text').value || "Poursuite de la prise en charge";
-      const evolutionDraft = `${jour} :
-- Résumé : ${resume}.
-- CAT : ${cat}.`;
+      const evolutionDraft = `${jour} :\n- Résumé : ${resume}.\n- CAT : ${cat}.`;
       document.getElementById('evo-presentation-text').value = evolutionDraft;
       showToast("Présentation de l'évolution générée !");
     }
@@ -1868,17 +1981,15 @@ CAT : ${cat || "À préciser"}`
 
     async function deletePatient(patientId, event) {
       event.stopPropagation();
-      if (confirm("Supprimer ce dossier ?")) {
-        try {
-          if (db) await deleteDoc(doc(db, "patients_medobs", patientId));
-        } catch(e) {}
-        window.patients = window.patients.filter(p => p.id !== patientId);
-        localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
-        updatePatientCount();
-        renderPatientsList();
-        renderRoomsView();
-        showToast("Dossier supprimé");
-      }
+      try {
+        if (db) await deleteDoc(doc(db, "patients_medobs", patientId));
+      } catch(e) {}
+      window.patients = window.patients.filter(p => p.id !== patientId);
+      localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
+      updatePatientCount();
+      renderPatientsList();
+      renderRoomsView();
+      showToast("Dossier supprimé");
     }
 
     function updateFormHeader(title, subtitle) {
@@ -1964,7 +2075,6 @@ CAT : ${cat || "À préciser"}`
       statusBadge.className = `text-[11px] font-bold px-2.5 py-0.5 rounded-full ${done ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`;
       statusBadge.innerText = done ? 'Évolution du jour validée' : 'Évolution du jour à faire';
 
-      // Tri rétrograde (du plus récent au plus ancien)
       const sortedEvos = [...(p.evolutions || [])].sort((a, b) =>
         String(b.dateISO || b.date || '').localeCompare(String(a.dateISO || a.date || ''))
       );
@@ -2016,7 +2126,7 @@ CAT : ${cat || "À préciser"}`
       const cat = document.getElementById('room-evo-cat').value.trim();
 
       if (!resume && !presentation && !cat) {
-        alert("Renseignez au moins le résumé, la présentation ou la CAT avant de valider.");
+        showToast("Renseignez le résumé, la présentation ou la CAT.");
         return;
       }
 
@@ -2063,9 +2173,27 @@ CAT : ${cat || "À préciser"}`
       }
     }
 
+    function copyTextSafe(txt, msg) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(() => showToast(msg)).catch(() => fallbackCopy(txt, msg));
+      } else {
+        fallbackCopy(txt, msg);
+      }
+    }
+
+    function fallbackCopy(txt, msg) {
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(msg);
+    }
+
     function copyRoomObservationAtoZ() {
       const txt = document.getElementById('room-full-obs-text')?.innerText || '';
-      navigator.clipboard.writeText(txt).then(() => showToast("Observation A → Z copiée !"));
+      copyTextSafe(txt, "Observation A → Z copiée !");
     }
 
     // =========================================================================
@@ -2113,7 +2241,7 @@ CAT : ${cat || "À préciser"}`
       const input = document.getElementById('new-room-name-input');
       const name = (input?.value || '').trim();
       if (!name) {
-        alert("Entrez un nom de salle (ex: Salle A).");
+        showToast("Entrez un nom de salle (ex: Salle A).");
         return;
       }
       const exists = (window.roomsCatalog || []).some(r => r.name.toLowerCase() === name.toLowerCase());
@@ -2141,11 +2269,11 @@ CAT : ${cat || "À préciser"}`
       const roomName = (sel?.value || '').trim();
       const bedName = (bedInput?.value || '').trim();
       if (!roomName) {
-        alert("Créez ou sélectionnez d'abord une salle.");
+        showToast("Créez ou sélectionnez d'abord une salle.");
         return;
       }
       if (!bedName) {
-        alert("Entrez un nom de lit (ex: Lit 2).");
+        showToast("Entrez un nom de lit (ex: Lit 2).");
         return;
       }
       const room = window.roomsCatalog.find(r => r.name === roomName);
@@ -2164,7 +2292,7 @@ CAT : ${cat || "À préciser"}`
       const sel = document.getElementById('bed-target-room-select');
       const roomName = (sel?.value || '').trim();
       if (!roomName) {
-        alert("Sélectionnez d'abord une salle.");
+        showToast("Sélectionnez d'abord une salle.");
         return;
       }
       const room = window.roomsCatalog.find(r => r.name === roomName);
@@ -2182,7 +2310,6 @@ CAT : ${cat || "À préciser"}`
 
     function deleteRoomFromUI(roomName, ev) {
       if (ev) ev.stopPropagation();
-      if (!confirm(`Supprimer la salle "${roomName}" de la liste ?`)) return;
       window.roomsCatalog = (window.roomsCatalog || []).filter(r => r.name !== roomName);
       saveRoomsCatalogLocal();
       refreshBedRoomSelect();
@@ -2245,9 +2372,12 @@ CAT : ${cat || "À préciser"}`
             window.selectedBedSlot.roomName === roomName &&
             window.selectedBedSlot.bedName === bedName;
 
+          const safeRoom = roomName.replace(/'/g, "\\'");
+          const safeBed = bedName.replace(/'/g, "\\'");
+
           if (occupant) {
             return `
-              <div onclick="selectBedSlot('${roomName.replace(/'/g, "\'")}', '${bedName.replace(/'/g, "\'")}')" class="w-full text-left p-2.5 rounded-xl border transition cursor-pointer touch-btn ${isSelected ? 'border-medical-600 bg-sky-50' : 'border-slate-200 bg-slate-50/70 hover:border-sky-300'}">
+              <div onclick="selectBedSlot('${safeRoom}', '${safeBed}')" class="w-full text-left p-2.5 rounded-xl border transition cursor-pointer touch-btn ${isSelected ? 'border-medical-600 bg-sky-50' : 'border-slate-200 bg-slate-50/70 hover:border-sky-300'}">
                 <div class="flex items-center justify-between gap-1">
                   <span class="text-xs font-extrabold text-slate-800"><i class="fa-solid fa-bed text-medical-600 mr-1"></i>${bedName}</span>
                   <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${done ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
@@ -2261,12 +2391,12 @@ CAT : ${cat || "À préciser"}`
           }
 
           return `
-            <div onclick="selectBedSlot('${roomName.replace(/'/g, "\'")}', '${bedName.replace(/'/g, "\'")}')" class="w-full text-left p-2.5 rounded-xl border border-dashed transition cursor-pointer touch-btn flex items-center justify-between gap-2 ${isSelected ? 'border-indigo-600 bg-indigo-50/70' : 'border-slate-300 bg-white hover:border-indigo-400'}">
+            <div onclick="selectBedSlot('${safeRoom}', '${safeBed}')" class="w-full text-left p-2.5 rounded-xl border border-dashed transition cursor-pointer touch-btn flex items-center justify-between gap-2 ${isSelected ? 'border-indigo-600 bg-indigo-50/70' : 'border-slate-300 bg-white hover:border-indigo-400'}">
               <div class="min-w-0">
                 <div class="text-xs font-bold text-slate-700"><i class="fa-solid fa-bed text-slate-400 mr-1"></i>${bedName}</div>
                 <div class="text-[11px] text-indigo-600 font-medium mt-0.5 truncate">+ Lit libre — Cliquer pour rédiger</div>
               </div>
-              <button type="button" onclick="deleteBedFromRoom('${roomName.replace(/'/g, "\'")}', '${bedName.replace(/'/g, "\'")}', event)" class="p-1 text-slate-300 hover:text-rose-500 flex-shrink-0" title="Retirer ce lit">
+              <button type="button" onclick="deleteBedFromRoom('${safeRoom}', '${safeBed}', event)" class="p-1 text-slate-300 hover:text-rose-500 flex-shrink-0" title="Retirer ce lit">
                 <i class="fa-solid fa-xmark text-xs"></i>
               </button>
             </div>
@@ -2275,13 +2405,14 @@ CAT : ${cat || "À préciser"}`
 
         if (!bedItemsHtml) return;
 
+        const safeRoomHeader = roomName.replace(/'/g, "\\'");
         html += `
           <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm space-y-2">
             <div class="flex items-center justify-between text-xs font-bold text-slate-700 border-b pb-1.5">
               <span><i class="fa-solid fa-door-open text-medical-600 mr-1"></i>${roomName}</span>
               <div class="flex items-center gap-2">
                 <span class="text-[11px] text-slate-400">${sortedBeds.length} lit(s)</span>
-                ${roomName !== 'Salle non assignée' ? `<button type="button" onclick="deleteRoomFromUI('${roomName.replace(/'/g, "\'")}', event)" class="text-slate-300 hover:text-rose-600" title="Supprimer la salle"><i class="fa-solid fa-trash text-[11px]"></i></button>` : ''}
+                ${roomName !== 'Salle non assignée' ? `<button type="button" onclick="deleteRoomFromUI('${safeRoomHeader}', event)" class="text-slate-300 hover:text-rose-600" title="Supprimer la salle"><i class="fa-solid fa-trash text-[11px]"></i></button>` : ''}
               </div>
             </div>
             <div class="space-y-1.5">
@@ -2469,7 +2600,7 @@ CAT : ${cat || "À préciser"}`
       const name = document.getElementById('new-group-name').value.trim();
       const rawEmails = document.getElementById('new-group-emails').value.trim();
       if (!name) {
-        alert("Donnez un nom au groupe.");
+        showToast("Donnez un nom au groupe.");
         return;
       }
       const user = (auth && auth.currentUser) ? auth.currentUser : null;
@@ -2583,12 +2714,12 @@ CAT : ${cat || "À préciser"}`
         generateObservationText();
       }
       const obsVal = document.getElementById('field-obs-medicale').value;
-      navigator.clipboard.writeText(obsVal).then(() => showToast("📋 Observation copiée !"));
+      copyTextSafe(obsVal, "📋 Observation copiée !");
     }
 
     function copyEvolutionForAI() {
       const evoText = document.getElementById('evo-presentation-text').value;
-      navigator.clipboard.writeText(evoText).then(() => showToast("📋 Évolution copiée !"));
+      copyTextSafe(evoText, "📋 Évolution copiée !");
     }
 
     function toggleMessengerBubble() {
@@ -2605,8 +2736,7 @@ CAT : ${cat || "À préciser"}`
       const text = input.value.trim();
       if (!text) return;
       const chatContainer = document.getElementById('chat-messages');
-      const safeUserText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/
-/g, "<br>");
+      const safeUserText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
       chatContainer.innerHTML += `<div class="flex items-start justify-end gap-2"><div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-sm max-w-[85%]">${safeUserText}</div></div>`;
       input.value = '';
       chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -2620,8 +2750,7 @@ CAT : ${cat || "À préciser"}`
           "Tu es un assistant clinicien senior expert en psychiatrie et neurologie. Réponds de manière précise, structurée et concise en français.",
           text
         );
-        const safeReply = reply.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/
-/g, "<br>");
+        const safeReply = reply.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
         const loader = document.getElementById(loadingId);
         if (loader) {
           loader.innerHTML = `<div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">IA</div><div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 text-slate-700 max-w-[85%] leading-relaxed">${safeReply}</div>`;
