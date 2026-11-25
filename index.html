@@ -36,11 +36,16 @@
   </script>
 
   <style>
-    /* Correctif anti-affichage brut si Tailwind tarde à charger */
+    /* Correctifs anti-chevauchement & stabilité d'affichage sur GitHub Pages / mobile */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { max-width: 100%; overflow-x: hidden; }
     .hidden { display: none !important; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .touch-btn:active { transform: scale(0.97); opacity: 0.9; }
+    input, select, textarea { max-width: 100%; min-width: 0; }
+    label { overflow-wrap: break-word; word-break: break-word; }
+    pre { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
     @keyframes pulse-subtle {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.05); }
@@ -48,7 +53,7 @@
     .animate-pulse-subtle { animation: pulse-subtle 3s infinite ease-in-out; }
   </style>
 </head>
-<body class="h-full font-sans text-slate-800 antialiased flex flex-col justify-between select-none relative">
+<body class="min-h-screen font-sans text-slate-800 antialiased flex flex-col bg-slate-50 relative">
 
   <!-- AUTH SCREEN -->
   <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
@@ -89,36 +94,42 @@
   </div>
 
   <!-- APPLICATION CONTAINER -->
-  <div id="app-container" class="flex-1 flex flex-col justify-between h-full hidden">
+  <div id="app-container" class="flex-1 flex flex-col min-h-screen hidden">
 
     <!-- Application Header -->
     <header class="bg-medical-700 text-white sticky top-0 z-30 shadow-md">
-      <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
-        <div class="flex items-center space-x-2">
-          <i class="fa-solid fa-brain text-2xl text-sky-300"></i>
-          <div>
-            <h1 class="font-bold text-lg leading-none">MedObs - Psychiatrie & Neuro</h1>
-            <span class="text-xs text-sky-200">Saisie Modulaire & Assistant IA</span>
+      <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2 min-w-0">
+            <i class="fa-solid fa-brain text-xl sm:text-2xl text-sky-300 flex-shrink-0"></i>
+            <div class="min-w-0">
+              <h1 class="font-bold text-base sm:text-lg leading-tight truncate">MedObs - Psychiatrie & Neuro</h1>
+              <span class="text-[11px] text-sky-200 block truncate">Saisie Modulaire & Assistant IA</span>
+            </div>
           </div>
+          <button onclick="handleLogout()" class="sm:hidden p-2 text-sky-200 hover:text-white transition" title="Se déconnecter">
+            <i class="fa-solid fa-right-from-bracket text-base"></i>
+          </button>
         </div>
-        <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+
+        <div class="flex items-center gap-1.5 flex-wrap">
           <button onclick="switchView('rooms')" class="px-2.5 py-1.5 bg-sky-900 hover:bg-sky-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition touch-btn">
             <i class="fa-solid fa-bed-pulse text-sky-300"></i>
             <span>Salles & Lits</span>
           </button>
           <button onclick="openGroupsModal()" class="px-2.5 py-1.5 bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition touch-btn">
             <i class="fa-solid fa-people-group"></i>
-            <span class="hidden sm:inline">Groupes</span>
+            <span>Groupes</span>
           </button>
           <button onclick="toggleMessengerBubble()" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition touch-btn">
             <i class="fa-solid fa-comments"></i>
-            <span class="hidden sm:inline">Brainstorming</span>
+            <span>Brainstorming</span>
           </button>
-          <button onclick="switchView('list')" class="px-3 py-1.5 bg-medical-800 hover:bg-medical-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition touch-btn">
+          <button onclick="switchView('list')" class="px-2.5 py-1.5 bg-medical-800 hover:bg-medical-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition touch-btn">
             <i class="fa-solid fa-folder-open text-sky-300"></i>
             <span>Dossiers (<span id="patient-count">0</span>)</span>
           </button>
-          <button onclick="handleLogout()" class="p-1.5 text-sky-200 hover:text-white transition" title="Se déconnecter">
+          <button onclick="handleLogout()" class="hidden sm:inline-flex p-1.5 text-sky-200 hover:text-white transition" title="Se déconnecter">
             <i class="fa-solid fa-right-from-bracket text-base"></i>
           </button>
         </div>
@@ -126,41 +137,44 @@
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 max-w-5xl w-full mx-auto p-4 pb-24 overflow-y-auto">
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-4 pt-4 pb-28">
 
       <!-- Toast Notification Box -->
-      <div id="toast" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 transition-all">
-        <i class="fa-solid fa-circle-check text-emerald-400"></i>
-        <span id="toast-text">Notification</span>
+      <div id="toast" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs sm:text-sm px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 transition-all max-w-[92vw]">
+        <i class="fa-solid fa-circle-check text-emerald-400 flex-shrink-0"></i>
+        <span id="toast-text" class="truncate">Notification</span>
       </div>
 
       <!-- CONFIGURATION API KEY MULTI-FOURNISSEURS -->
-      <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-col sm:flex-row items-center gap-2 text-xs">
-        <div class="flex items-center gap-1.5 w-full sm:w-auto">
-          <i class="fa-solid fa-key text-medical-600"></i>
-          <span class="font-semibold text-slate-700">Clé API :</span>
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-4 grid grid-cols-1 md:grid-cols-12 gap-2 items-center text-xs">
+        <div class="md:col-span-6 flex items-center gap-2">
+          <span class="font-semibold text-slate-700 whitespace-nowrap flex items-center gap-1.5">
+            <i class="fa-solid fa-key text-medical-600"></i> Clé API :
+          </span>
+          <input type="password" id="openrouter-api-key" placeholder="Collez votre clé AIzaSy... ou sk-or-v1-..." class="flex-1 p-2 border border-slate-200 rounded-lg font-mono text-xs outline-none focus:ring-2 focus:ring-medical-500">
         </div>
-        <input type="password" id="openrouter-api-key" placeholder="Collez votre clé AIzaSy... ou sk-or-v1-..." class="flex-1 w-full p-1.5 border rounded-lg font-mono text-xs outline-none focus:ring-2 focus:ring-medical-500">
         
-        <div class="flex items-center gap-1.5 w-full sm:w-auto">
-          <i class="fa-solid fa-robot text-indigo-600"></i>
-          <select id="openrouter-model" class="p-1.5 border rounded-lg text-xs font-semibold bg-slate-50 outline-none w-full sm:w-auto">
-            <optgroup label="Google AI Studio (Gratuit - AIzaSy...)">
-              <option value="google|gemini-3.5-flash-lite" selected>Gemini 3.5 Flash-Lite (Gratuit)</option>
-              <option value="google|gemini-3.8-flash">Gemini 3.8 Flash (Gratuit)</option>
-              <option value="google|gemini-3.6-flash">Gemini 3.6 Flash (Gratuit)</option>
-              <option value="google|gemma-4">Gemma 4 (Gratuit)</option>
+        <div class="md:col-span-6 flex items-center gap-2">
+          <span class="font-semibold text-slate-700 whitespace-nowrap flex items-center gap-1.5">
+            <i class="fa-solid fa-robot text-indigo-600"></i> Modèle :
+          </span>
+          <select id="openrouter-model" class="flex-1 p-2 border border-slate-200 rounded-lg text-xs font-semibold bg-slate-50 outline-none focus:ring-2 focus:ring-medical-500">
+            <optgroup label="Google AI Studio (Gratuit / Payant - AIzaSy...)">
+              <option value="google|gemini-3.5-flash-lite" selected>Gemini 3.5 Flash-Lite</option>
+              <option value="google|gemini-3.8-flash">Gemini 3.8 Flash</option>
+              <option value="google|gemini-3.6-flash">Gemini 3.6 Flash</option>
+              <option value="google|gemma-4">Gemma 4</option>
             </optgroup>
-            <optgroup label="OpenRouter (Gratuit - sk-or-v1-...)">
+            <optgroup label="OpenRouter (sk-or-v1-...)">
               <option value="openrouter|openrouter/free">OpenRouter Auto (Gratuit)</option>
               <option value="openrouter|meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Gratuit)</option>
               <option value="openrouter|deepseek/deepseek-r1:free">DeepSeek R1 (Gratuit)</option>
             </optgroup>
-            <optgroup label="Groq (Gratuit - gsk_...)">
-              <option value="groq|llama-3.3-70b-versatile">Groq Llama 3.3 70B (Gratuit)</option>
+            <optgroup label="Groq (gsk_...)">
+              <option value="groq|llama-3.3-70b-versatile">Groq Llama 3.3 70B</option>
             </optgroup>
-            <optgroup label="Mistral AI (Gratuit)">
-              <option value="mistral|mistral-small-latest">Mistral Small (Gratuit)</option>
+            <optgroup label="Mistral AI">
+              <option value="mistral|mistral-small-latest">Mistral Small</option>
             </optgroup>
           </select>
         </div>
@@ -184,7 +198,7 @@
         </div>
 
         <!-- Barre de création dynamique de Salle et de Lit -->
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-2.5 text-xs items-end">
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-3 text-xs items-end">
           <div class="md:col-span-4 space-y-1">
             <label class="font-bold text-slate-700 flex items-center gap-1">
               <i class="fa-solid fa-door-closed text-medical-600"></i> Créer / Ajouter une Salle
@@ -201,10 +215,10 @@
             <label class="font-bold text-slate-700 flex items-center gap-1">
               <i class="fa-solid fa-bed text-indigo-600"></i> Ajouter un Lit dans une Salle
             </label>
-            <div class="flex gap-1.5">
-              <select id="bed-target-room-select" class="px-2.5 py-2 border border-slate-200 rounded-xl bg-slate-50 font-semibold outline-none focus:ring-2 focus:ring-medical-500 max-w-[140px]">
+            <div class="flex flex-wrap sm:flex-nowrap gap-1.5">
+              <select id="bed-target-room-select" class="px-2.5 py-2 border border-slate-200 rounded-xl bg-slate-50 font-semibold outline-none focus:ring-2 focus:ring-medical-500 sm:max-w-[140px] w-full sm:w-auto">
               </select>
-              <input type="text" id="new-bed-name-input" placeholder="ex: Lit 1, Lit 2, Lit 3..." class="flex-1 px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-medical-500">
+              <input type="text" id="new-bed-name-input" placeholder="ex: Lit 1, Lit 2..." class="flex-1 px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-medical-500">
               <button type="button" onclick="addBedToRoomFromUI()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow touch-btn whitespace-nowrap">
                 <i class="fa-solid fa-plus"></i> Lit
               </button>
@@ -221,28 +235,28 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           <!-- Colonne gauche : Salles et lits -->
           <div class="lg:col-span-4 space-y-3">
             <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-              <div class="flex gap-1 text-xs font-bold">
-                <button onclick="setRoomFilter('all')" id="rflt-all" class="flex-1 py-1.5 rounded-lg bg-slate-900 text-white">Tous</button>
-                <button onclick="setRoomFilter('pending')" id="rflt-pending" class="flex-1 py-1.5 rounded-lg bg-amber-100 text-amber-800">À faire</button>
-                <button onclick="setRoomFilter('done')" id="rflt-done" class="flex-1 py-1.5 rounded-lg bg-emerald-100 text-emerald-800">Validés</button>
+              <div class="grid grid-cols-3 gap-1 text-xs font-bold">
+                <button onclick="setRoomFilter('all')" id="rflt-all" class="py-1.5 rounded-lg bg-slate-900 text-white">Tous</button>
+                <button onclick="setRoomFilter('pending')" id="rflt-pending" class="py-1.5 rounded-lg bg-amber-100 text-amber-800">À faire</button>
+                <button onclick="setRoomFilter('done')" id="rflt-done" class="py-1.5 rounded-lg bg-emerald-100 text-emerald-800">Validés</button>
               </div>
               <input type="text" id="room-search-input" oninput="renderRoomsView()" placeholder="Filtrer salle, lit, nom, motif..." class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-medical-500">
             </div>
-            <div id="rooms-list-container" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1"></div>
+            <div id="rooms-list-container" class="space-y-3 max-h-[65vh] overflow-y-auto pr-1"></div>
           </div>
 
           <!-- Colonne droite : Détail lit sélectionné -->
           <div class="lg:col-span-8 space-y-4">
-            <div id="room-empty-state" class="bg-white p-10 rounded-2xl border border-dashed border-slate-300 text-center text-xs text-slate-500">
+            <div id="room-empty-state" class="bg-white p-8 sm:p-10 rounded-2xl border border-dashed border-slate-300 text-center text-xs text-slate-500">
               Cliquez sur un <strong>lit</strong> à gauche (ex. <strong>Lit 2</strong>) pour ouvrir immédiatement son <strong>fichier de rédaction à remplir</strong>, consulter l'historique rétrograde et lire l'observation médicale complète de A à Z.
             </div>
 
             <!-- Panneau si le lit sélectionné est LIBRE / VIDE : Fichier de rédaction / affectation rapide à remplir -->
-            <div id="room-free-bed-panel" class="hidden bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div id="room-free-bed-panel" class="hidden bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
               <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
                 <div>
                   <div class="flex items-center gap-2 flex-wrap">
@@ -266,15 +280,15 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div>
-                    <label class="font-semibold text-slate-600">Nom du patient</label>
+                    <label class="font-semibold text-slate-600 block mb-1">Nom du patient</label>
                     <input type="text" id="free-bed-nom" placeholder="Nom..." class="w-full p-2 border rounded-xl font-semibold">
                   </div>
                   <div>
-                    <label class="font-semibold text-slate-600">Prénom</label>
+                    <label class="font-semibold text-slate-600 block mb-1">Prénom</label>
                     <input type="text" id="free-bed-prenom" placeholder="Prénom..." class="w-full p-2 border rounded-xl font-semibold">
                   </div>
                   <div>
-                    <label class="font-semibold text-slate-600">Âge / Sexe</label>
+                    <label class="font-semibold text-slate-600 block mb-1">Âge / Sexe</label>
                     <div class="flex gap-1.5">
                       <input type="text" id="free-bed-age" placeholder="ex: 32 ans" class="w-2/3 p-2 border rounded-xl">
                       <select id="free-bed-sexe" class="w-1/3 p-2 border rounded-xl font-semibold bg-white">
@@ -286,17 +300,17 @@
                 </div>
 
                 <div>
-                  <label class="font-semibold text-slate-600">Motif d'hospitalisation / d'admission</label>
+                  <label class="font-semibold text-slate-600 block mb-1">Motif d'hospitalisation / d'admission</label>
                   <input type="text" id="free-bed-motif" placeholder="ex: Agitation psychomotrice, Trouble thymique..." class="w-full p-2 border rounded-xl font-semibold">
                 </div>
 
                 <div>
-                  <label class="font-semibold text-slate-600">Rédaction initiale / Notes cliniques à remplir (HdM, ATCD, Examen)</label>
+                  <label class="font-semibold text-slate-600 block mb-1">Rédaction initiale / Notes cliniques à remplir (HdM, ATCD, Examen)</label>
                   <textarea id="free-bed-notes" rows="5" placeholder="Rédigez ici les premières notes cliniques, l'histoire de la maladie ou les observations pour ce lit..." class="w-full p-2.5 border rounded-xl bg-slate-50 font-mono text-xs focus:bg-white outline-none focus:ring-2 focus:ring-medical-500"></textarea>
                 </div>
 
                 <div>
-                  <label class="font-semibold text-slate-600">Traitement / Conduite à tenir (CAT) initial(e)</label>
+                  <label class="font-semibold text-slate-600 block mb-1">Traitement / Conduite à tenir (CAT) initial(e)</label>
                   <textarea id="free-bed-cat" rows="2" placeholder="Prescriptions initiales, surveillance..." class="w-full p-2 border rounded-xl font-mono text-xs"></textarea>
                 </div>
 
@@ -342,7 +356,7 @@
               </div>
 
               <!-- Deux sous-blocs : Évolution rétrograde + Observation A à Z -->
-              <div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+              <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
                 <div class="xl:col-span-7 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                   <h4 class="text-xs font-bold uppercase tracking-wider text-medical-700 flex items-center gap-1.5">
                     <i class="fa-solid fa-calendar-day"></i> Rédaction Évolution du Jour & Rétrograde
@@ -366,11 +380,11 @@
                 </div>
 
                 <div class="xl:col-span-5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-center justify-between gap-2">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                       <i class="fa-solid fa-file-lines text-emerald-600"></i> Observation Médicale (A → Z)
                     </h4>
-                    <button onclick="copyRoomObservationAtoZ()" class="text-[11px] px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold">
+                    <button onclick="copyRoomObservationAtoZ()" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold whitespace-nowrap">
                       Copier
                     </button>
                   </div>
@@ -408,13 +422,13 @@
         
         <!-- Header -->
         <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between flex-wrap gap-2">
-          <div class="flex items-center gap-3">
-            <button onclick="switchView('list')" class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 touch-btn">
+          <div class="flex items-center gap-3 min-w-0">
+            <button onclick="switchView('list')" class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 touch-btn flex-shrink-0">
               <i class="fa-solid fa-arrow-left"></i>
             </button>
-            <div>
-              <h3 id="display-patient-name" class="font-bold text-slate-800 text-base">Patient</h3>
-              <span id="display-patient-info" class="text-xs font-medium text-slate-500">Observation Clinique & Sémiologique</span>
+            <div class="min-w-0">
+              <h3 id="display-patient-name" class="font-bold text-slate-800 text-base truncate">Patient</h3>
+              <span id="display-patient-info" class="text-xs font-medium text-slate-500 block truncate">Observation Clinique & Sémiologique</span>
             </div>
           </div>
           <div class="flex gap-2">
@@ -445,30 +459,30 @@
             <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
               <i class="fa-solid fa-id-card"></i> Identité & Profil Sociodémographique
             </h4>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-              <div><label class="font-medium text-slate-500">Nom</label><input type="text" id="field-nom" placeholder="Nom..." class="w-full p-2 border rounded-lg font-semibold"></div>
-              <div><label class="font-medium text-slate-500">Prénom</label><input type="text" id="field-prenom" placeholder="Prénom..." class="w-full p-2 border rounded-lg font-semibold"></div>
-              <div><label class="font-medium text-slate-500">Âge</label><input type="text" id="field-age" placeholder="ex: 44 ans" class="w-full p-2 border rounded-lg font-semibold"></div>
-              <div><label class="font-medium text-slate-500">Sexe</label><select id="field-sexe" class="w-full p-2 border rounded-lg font-semibold"><option value="M">Masculin</option><option value="F">Féminin</option></select></div>
-              <div><label class="font-medium text-slate-500">État civil</label><input type="text" id="field-etatcivil" placeholder="Célibataire..." class="w-full p-2 border rounded-lg"></div>
-              <div><label class="font-medium text-slate-500">Profession</label><input type="text" id="field-profession" placeholder="Profession..." class="w-full p-2 border rounded-lg"></div>
-              <div><label class="font-medium text-slate-500">NSE (Socio-Éco)</label><input type="text" id="field-nse" placeholder="Niveau..." class="w-full p-2 border rounded-lg"></div>
-              <div><label class="font-medium text-slate-500">Scolarité</label><input type="text" id="field-scolarite" placeholder="Niveau..." class="w-full p-2 border rounded-lg"></div>
-              <div><label class="font-medium text-slate-500">Religion</label><input type="text" id="field-religion" placeholder="Religion..." class="w-full p-2 border rounded-lg"></div>
-              <div><label class="font-medium text-slate-500">Fratrie</label><input type="text" id="field-fratrie" placeholder="ex: 2/5..." class="w-full p-2 border rounded-lg"></div>
-              <div><label class="font-medium text-slate-500">Originaire de</label><input type="text" id="field-origine" placeholder="Ville..." class="w-full p-2 border rounded-lg"></div>
-              <div><label class="font-medium text-slate-500">Nationalité</label><input type="text" id="field-nationalite" value="Malagasy" class="w-full p-2 border rounded-lg"></div>
-              <div><label class="font-medium text-slate-500">Salle</label><input type="text" id="field-salle" placeholder="ex: Salle 1" class="w-full p-2 border rounded-lg"></div>
-              <div><label class="font-medium text-slate-500">Lit</label><input type="text" id="field-lit" placeholder="ex: Lit 02" class="w-full p-2 border rounded-lg"></div>
-              <div class="col-span-2">
-                <label class="font-medium text-slate-500">Partager avec un groupe</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 text-xs">
+              <div><label class="font-medium text-slate-500 block mb-1">Nom</label><input type="text" id="field-nom" placeholder="Nom..." class="w-full p-2 border rounded-lg font-semibold"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Prénom</label><input type="text" id="field-prenom" placeholder="Prénom..." class="w-full p-2 border rounded-lg font-semibold"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Âge</label><input type="text" id="field-age" placeholder="ex: 44 ans" class="w-full p-2 border rounded-lg font-semibold"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Sexe</label><select id="field-sexe" class="w-full p-2 border rounded-lg font-semibold bg-white"><option value="M">Masculin</option><option value="F">Féminin</option></select></div>
+              <div><label class="font-medium text-slate-500 block mb-1">État civil</label><input type="text" id="field-etatcivil" placeholder="Célibataire..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Profession</label><input type="text" id="field-profession" placeholder="Profession..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">NSE (Socio-Éco)</label><input type="text" id="field-nse" placeholder="Niveau..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Scolarité</label><input type="text" id="field-scolarite" placeholder="Niveau..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Religion</label><input type="text" id="field-religion" placeholder="Religion..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Fratrie</label><input type="text" id="field-fratrie" placeholder="ex: 2/5..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Originaire de</label><input type="text" id="field-origine" placeholder="Ville..." class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Nationalité</label><input type="text" id="field-nationalite" value="Malagasy" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Salle</label><input type="text" id="field-salle" placeholder="ex: Salle 1" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500 block mb-1">Lit</label><input type="text" id="field-lit" placeholder="ex: Lit 02" class="w-full p-2 border rounded-lg"></div>
+              <div class="sm:col-span-2">
+                <label class="font-medium text-slate-500 block mb-1">Partager avec un groupe</label>
                 <select id="field-shared-group" class="w-full p-2 border rounded-lg bg-white">
                   <option value="">Privé (moi uniquement)</option>
                 </select>
               </div>
             </div>
-            <div class="pt-2">
-              <label class="text-xs font-medium text-slate-500">Motif principal d'hospitalisation</label>
+            <div class="pt-1">
+              <label class="text-xs font-medium text-slate-500 block mb-1">Motif principal d'hospitalisation</label>
               <input type="text" id="field-motif" placeholder="ex: Trouble du comportement..." class="w-full p-2 border rounded-lg text-sm font-semibold">
             </div>
           </div>
@@ -481,49 +495,49 @@
 
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
               <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-wine-glass-drop text-amber-600"></i> A. Habitudes Toxiques :</span>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip" value="Alcool" onchange="toggleToxDetails()"> Alcool</label>
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip" value="Tabac" onchange="toggleToxDetails()"> Tabac</label>
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip" value="Cannabis / THC" onchange="toggleToxDetails()"> Cannabis / THC</label>
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip" value="Médicaments détournés" onchange="toggleToxDetails()"> Médicaments</label>
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer font-bold text-slate-600"><input type="checkbox" id="atcd-tox-none" onchange="checkToxNone(this)"> Aucune habitude toxique</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip flex-shrink-0" value="Alcool" onchange="toggleToxDetails()"> <span>Alcool</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip flex-shrink-0" value="Tabac" onchange="toggleToxDetails()"> <span>Tabac</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip flex-shrink-0" value="Cannabis / THC" onchange="toggleToxDetails()"> <span>Cannabis / THC</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-tox-chip flex-shrink-0" value="Médicaments détournés" onchange="toggleToxDetails()"> <span>Médicaments</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer font-bold text-slate-600 sm:col-span-2"><input type="checkbox" id="atcd-tox-none" class="flex-shrink-0" onchange="checkToxNone(this)"> <span>Aucune habitude toxique</span></label>
               </div>
 
-              <div id="tox-extra-fields" class="hidden grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-200">
+              <div id="tox-extra-fields" class="hidden grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-200">
                 <div>
-                  <label class="font-medium text-slate-500">Date de début / Ancienneté</label>
+                  <label class="font-medium text-slate-500 block mb-1">Date de début / Ancienneté</label>
                   <input type="text" id="atcd-tox-debut" placeholder="ex: Depuis l'adolescence" class="w-full p-2 border rounded-lg bg-white">
                 </div>
                 <div>
-                  <label class="font-medium text-slate-500 text-rose-600 font-bold">Dernière prise (Heure/Date)</label>
+                  <label class="font-medium text-rose-600 font-bold block mb-1">Dernière prise (Heure/Date)</label>
                   <input type="text" id="atcd-tox-derniere-prise" placeholder="ex: Samedi 30 octobre" class="w-full p-2 border rounded-lg bg-white border-rose-200">
                 </div>
                 <div>
-                  <label class="font-medium text-slate-500">Raison d'arrêt / Quantités</label>
+                  <label class="font-medium text-slate-500 block mb-1">Raison d'arrêt / Quantités</label>
                   <input type="text" id="atcd-tox-raison-arret" placeholder="ex: 2 prises/jour" class="w-full p-2 border rounded-lg bg-white">
                 </div>
               </div>
-              <textarea id="atcd-tox-free" rows="1.5" placeholder="✎ Précisions toxiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="atcd-tox-free" rows="2" placeholder="✎ Précisions toxiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
               <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-brain text-indigo-600"></i> B. Antécédents Psychiatriques :</span>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-psy-chip" value="Hospitalisation en psychiatrie antérieure"> Hospitalisation en psychiatrie</label>
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-psy-chip" value="Épisodes thymiques / MMD antérieurs"> Épisodes thymiques / MMD</label>
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer font-bold text-slate-600"><input type="checkbox" id="atcd-psy-none" onchange="checkPsyNone(this)"> Pas d'ATCD psychiatrique</label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-psy-chip flex-shrink-0" value="Hospitalisation en psychiatrie antérieure"> <span>Hospitalisation en psychiatrie</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-psy-chip flex-shrink-0" value="Épisodes thymiques / MMD antérieurs"> <span>Épisodes thymiques / MMD</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer font-bold text-slate-600 md:col-span-2"><input type="checkbox" id="atcd-psy-none" class="flex-shrink-0" onchange="checkPsyNone(this)"> <span>Pas d'ATCD psychiatrique</span></label>
               </div>
               <textarea id="atcd-psy-free" rows="2" placeholder="✎ Précisions psychiatriques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
               <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-heart-pulse text-rose-600"></i> C. Antécédents Médicaux :</span>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5">
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-med-chip" value="Épilepsie / Crises convulsives"> Épilepsie / Crises</label>
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-med-chip" value="HTA / Diabète"> HTA / Diabète</label>
-                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer font-bold text-slate-600"><input type="checkbox" id="atcd-med-none" onchange="checkMedNone(this)"> Pas d'ATCD médical</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-med-chip flex-shrink-0" value="Épilepsie / Crises convulsives"> <span>Épilepsie / Crises</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="atcd-med-chip flex-shrink-0" value="HTA / Diabète"> <span>HTA / Diabète</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer font-bold text-slate-600"><input type="checkbox" id="atcd-med-none" class="flex-shrink-0" onchange="checkMedNone(this)"> <span>Pas d'ATCD médical</span></label>
               </div>
-              <textarea id="atcd-med-free" rows="1.5" placeholder="✎ Précisions médicales..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="atcd-med-free" rows="2" placeholder="✎ Précisions médicales..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
           </div>
 
@@ -543,7 +557,7 @@
 
             <div class="tags-group flex flex-wrap gap-1.5 items-center">
               <span class="tag-title text-xs font-bold text-slate-500 w-full">Sommeil & Comportement :</span>
-              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Insomnie d\'endormissement')">+ Insomnie d'endormissement</button>
+              <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Insomnie d'endormissement')">+ Insomnie d'endormissement</button>
               <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Insomnie totale')">+ Insomnie totale</button>
               <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Fatigue au réveil')">+ Fatigue au réveil</button>
               <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Déambulation et propos inintelligibles')">+ Déambulation / Propos inintelligibles</button>
@@ -568,13 +582,13 @@
             <!-- 1. État Général -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <span class="font-bold text-slate-700 block">1. État Général</span>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip" value="Bon état général."> Bon état général</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip" value="Apyrétique."> Apyrétique</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip" value="Absence de signes de déshydratation."> Absence de signes de déshydratation</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip" value="Absence de détresse respiratoire."> Absence de détresse respiratoire</label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip flex-shrink-0" value="Bon état général."> <span>Bon état général</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip flex-shrink-0" value="Apyrétique."> <span>Apyrétique</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip flex-shrink-0" value="Absence de signes de déshydratation."> <span>Absence de signes de déshydratation</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gen-chip flex-shrink-0" value="Absence de détresse respiratoire."> <span>Absence de détresse respiratoire</span></label>
               </div>
-              <textarea id="om-gen-free" rows="1.5" placeholder="✎ Précisions état général..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-gen-free" rows="2" placeholder="✎ Précisions état général..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <!-- 2. Constantes Vitales -->
@@ -586,108 +600,108 @@
             <!-- 3. Appareil Cardiovasculaire -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <span class="font-bold text-slate-700 block"><i class="fa-solid fa-heart-pulse text-rose-600"></i> 3. Examen Cardiovasculaire</span>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="Absence de cyanose."> Absence de cyanose</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="Absence de turgescence jugulaire."> Absence de turgescence jugulaire</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="Absence d'œdèmes des membres inférieurs."> Absence d'œdèmes des MI</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="Choc de pointe palpable non dévié."> Choc de pointe palpable non dévié</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip" value="B1/B2 réguliers, pas de souffle."> B1/B2 réguliers, pas de souffle</label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip flex-shrink-0" value="Absence de cyanose."> <span>Absence de cyanose</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip flex-shrink-0" value="Absence de turgescence jugulaire."> <span>Absence de turgescence jugulaire</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip flex-shrink-0" value="Absence d'œdèmes des membres inférieurs."> <span>Absence d'œdèmes des MI</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-cardio-chip flex-shrink-0" value="Choc de pointe palpable non dévié."> <span>Choc de pointe palpable non dévié</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer md:col-span-2"><input type="checkbox" class="om-cardio-chip flex-shrink-0" value="B1/B2 réguliers, pas de souffle."> <span>B1/B2 réguliers, pas de souffle</span></label>
               </div>
-              <textarea id="om-cardio-free" rows="1.5" placeholder="✎ Précisions cardiovasculaires..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-cardio-free" rows="2" placeholder="✎ Précisions cardiovasculaires..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <!-- 4. Appareil Pleuropulmonaire -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <span class="font-bold text-slate-700 block"><i class="fa-solid fa-lungs text-sky-600"></i> 4. Examen Pleuropulmonaire</span>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pulmo-chip" value="Thorax symétrique, mouvements respiratoires réguliers et symétriques."> Thorax et mouvements symétriques</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pulmo-chip" value="Murmure vésiculaire bien perçu et symétrique, sans râles."> Murmure vésiculaire normal, pas de râles</label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pulmo-chip flex-shrink-0" value="Thorax symétrique, mouvements respiratoires réguliers et symétriques."> <span>Thorax et mouvements symétriques</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pulmo-chip flex-shrink-0" value="Murmure vésiculaire bien perçu et symétrique, sans râles."> <span>Murmure vésiculaire normal, pas de râles</span></label>
               </div>
-              <textarea id="om-pulmo-free" rows="1.5" placeholder="✎ Précisions pleuropulmonaires..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-pulmo-free" rows="2" placeholder="✎ Précisions pleuropulmonaires..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <!-- 5. Appareil Abdominal -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <span class="font-bold text-slate-700 block"><i class="fa-solid fa-stomach text-emerald-600"></i> 5. Examen Abdominal</span>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-abdo-chip" value="Abdomen souple, indolore, sans masse palpable ni organomégalie."> Abdomen souple, indolore</label>
+              <div class="grid grid-cols-1 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-abdo-chip flex-shrink-0" value="Abdomen souple, indolore, sans masse palpable ni organomégalie."> <span>Abdomen souple, indolore</span></label>
               </div>
-              <textarea id="om-abdo-free" rows="1.5" placeholder="✎ Précisions abdominales..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-abdo-free" rows="2" placeholder="✎ Précisions abdominales..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <!-- 6. Examen Neurologique -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <span class="font-bold text-slate-700 block"><i class="fa-solid fa-brain text-medical-600"></i> 6. Examen Neurologique (Normal)</span>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Conscient, vigilant, bien orienté, Glasgow 15/15 (E4V5M6)."> Conscient, Glasgow 15/15</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Paires crâniennes (I à XII) intactes."> Paires crâniennes I à XII intactes</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Force musculaire conservée aux 4 membres (5/5 MRC)."> Force 5/5 MRC aux 4 membres</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="ROT présents et symétriques, Babinski absent."> ROT présents et symétriques, Babinski absent</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip" value="Marche et coordination normales, Romberg négatif."> Marche et coordination normales</label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip flex-shrink-0" value="Conscient, vigilant, bien orienté, Glasgow 15/15 (E4V5M6)."> <span>Conscient, Glasgow 15/15</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip flex-shrink-0" value="Paires crâniennes (I à XII) intactes."> <span>Paires crâniennes I à XII intactes</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip flex-shrink-0" value="Force musculaire conservée aux 4 membres (5/5 MRC)."> <span>Force 5/5 MRC aux 4 membres</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-neuro-chip flex-shrink-0" value="ROT présents et symétriques, Babinski absent."> <span>ROT présents et symétriques, Babinski absent</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer md:col-span-2"><input type="checkbox" class="om-neuro-chip flex-shrink-0" value="Marche et coordination normales, Romberg négatif."> <span>Marche et coordination normales</span></label>
               </div>
-              <textarea id="om-neuro-free" rows="1.5" placeholder="✎ Précisions neurologiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-neuro-free" rows="2" placeholder="✎ Précisions neurologiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <!-- 7. Aires Ganglionnaires -->
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <span class="font-bold text-slate-700 block">7. Aires Ganglionnaires</span>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gang-chip" value="Aires ganglionnaires libres."> Aires ganglionnaires libres</label>
+              <div class="grid grid-cols-1 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-gang-chip flex-shrink-0" value="Aires ganglionnaires libres."> <span>Aires ganglionnaires libres</span></label>
               </div>
-              <textarea id="om-gang-free" rows="1.5" placeholder="✎ Précisions aires ganglionnaires..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-gang-free" rows="2" placeholder="✎ Précisions aires ganglionnaires..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
           </div>
 
           <!-- EXAMEN PSYCHIATRIQUE INITIAL (OM) -->
           <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between flex-wrap gap-2">
               <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
                 <i class="fa-solid fa-brain"></i> Examen Psychiatrique Initial (OM)
               </h4>
-              <label class="flex items-center gap-1 text-[11px] text-medical-700 bg-slate-50 px-2 py-1 rounded border cursor-pointer font-semibold">
+              <label class="flex items-center gap-1.5 text-[11px] text-medical-700 bg-slate-50 px-2.5 py-1.5 rounded-lg border cursor-pointer font-semibold">
                 <input type="checkbox" onchange="toggleAutoPsyOM(this)"> Remplissage auto
               </label>
             </div>
             
             <div class="bg-slate-50 p-3 rounded-xl space-y-2 border text-xs">
               <span class="font-bold text-slate-700 block">A. Présentation / Contact / Comportement :</span>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Tenue adaptée"> Tenue adaptée</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Hypomimie"> Hypomimie</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Contact facile"> Contact facile</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip" value="Pas d'agitation"> Pas d'agitation</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip flex-shrink-0" value="Tenue adaptée"> <span>Tenue adaptée</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip flex-shrink-0" value="Hypomimie"> <span>Hypomimie</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip flex-shrink-0" value="Contact facile"> <span>Contact facile</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pres-chip flex-shrink-0" value="Pas d'agitation"> <span>Pas d'agitation</span></label>
               </div>
-              <textarea id="om-pres-free" rows="1.5" placeholder="✎ Précisions présentation..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-pres-free" rows="2" placeholder="✎ Précisions présentation..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <div class="bg-slate-50 p-3 rounded-xl space-y-2 border text-xs">
               <span class="font-bold text-slate-700 block">B. Conduites instinctuelles :</span>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip" value="Sphincters normaux"> Sphincters normaux</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip" value="Sommeil conservé 8h"> Sommeil conservé (8h)</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip" value="Alimentation normale"> Alimentation normale</label>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip flex-shrink-0" value="Sphincters normaux"> <span>Sphincters normaux</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip flex-shrink-0" value="Sommeil conservé 8h"> <span>Sommeil conservé (8h)</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-inst-chip flex-shrink-0" value="Alimentation normale"> <span>Alimentation normale</span></label>
               </div>
-              <textarea id="om-inst-free" rows="1.5" placeholder="✎ Précisions conduites instinctuelles..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-inst-free" rows="2" placeholder="✎ Précisions conduites instinctuelles..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <div class="bg-slate-50 p-3 rounded-xl space-y-2 border text-xs">
               <span class="font-bold text-slate-700 block">C. Fonctions supérieures & Pensée :</span>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Pas de barrage"> Pas de barrage</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Mémoire intacte"> Mémoire intacte</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Cours pensée normal"> Cours pensée normal</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip" value="Pas d'hallucination"> Pas d'hallucination</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip flex-shrink-0" value="Pas de barrage"> <span>Pas de barrage</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip flex-shrink-0" value="Mémoire intacte"> <span>Mémoire intacte</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip flex-shrink-0" value="Cours pensée normal"> <span>Cours pensée normal</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-pens-chip flex-shrink-0" value="Pas d'hallucination"> <span>Pas d'hallucination</span></label>
               </div>
-              <textarea id="om-pens-free" rows="1.5" placeholder="✎ Précisions fonctions supérieures..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-pens-free" rows="2" placeholder="✎ Précisions fonctions supérieures..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <div class="bg-slate-50 p-3 rounded-xl space-y-2 border text-xs">
               <span class="font-bold text-slate-700 block">D. Affects & Humeur :</span>
-              <div class="grid grid-cols-2 gap-1.5">
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-aff-chip" value="Humeur athymique"> Humeur athymique</label>
-                <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="om-aff-chip" value="Pas d'anxiété"> Pas d'anxiété</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-aff-chip flex-shrink-0" value="Humeur athymique"> <span>Humeur athymique</span></label>
+                <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="om-aff-chip flex-shrink-0" value="Pas d'anxiété"> <span>Pas d'anxiété</span></label>
               </div>
-              <textarea id="om-aff-free" rows="1.5" placeholder="✎ Précisions affectivité..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="om-aff-free" rows="2" placeholder="✎ Précisions affectivité..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
           </div>
 
@@ -705,22 +719,22 @@
           <div class="bg-indigo-50/60 p-4 rounded-2xl shadow-sm border border-indigo-200 space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-2">
               <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
-                <i class="fa-solid fa-file-pen"></i> Observation Médicale Complète (Générée & Prête)
+                <i class="fa-solid fa-file-pen"></i> Observation Médicale Complète (Rédaction A → Z)
               </h4>
-              <div class="flex gap-2">
+              <div class="flex flex-wrap gap-2">
                 <button onclick="generateObservationText()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow touch-btn flex items-center gap-1.5">
                   <i class="fa-solid fa-bolt"></i> Local
                 </button>
                 <button onclick="generateObservationWithAI()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow touch-btn flex items-center gap-1.5">
-                  <i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 IA
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 IA (A → Z)
                 </button>
                 <button onclick="exportToWordDocx()" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow touch-btn flex items-center gap-1.5">
                   <i class="fa-solid fa-file-word"></i> Word
                 </button>
               </div>
             </div>
-            <p class="text-[11px] text-slate-500">Ce champ assemble tout le dossier selon le squelette strict d'observation en psychiatrie (et les règles HdM / Résumé syndromique).</p>
-            <textarea id="field-obs-medicale" rows="14" placeholder="Cliquez sur '🤖 IA' ou 'Local'..." class="w-full p-3 border border-indigo-200 rounded-xl bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/25 font-mono leading-relaxed"></textarea>
+            <p class="text-[11px] text-slate-600">L'IA rédige l'observation médicale complète de A à Z (sans « [À renseigner] »), détaille chaque appareil avec les signes normaux/négatifs et dégage le résumé syndromique (et thèmes) en cas d'anomalie.</p>
+            <textarea id="field-obs-medicale" rows="16" placeholder="Cliquez sur '🤖 IA (A → Z)' ou 'Local'..." class="w-full p-3 border border-indigo-200 rounded-xl bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/25 font-mono leading-relaxed"></textarea>
           </div>
 
           <button onclick="saveCurrentPatient()" class="w-full py-3.5 bg-medical-600 hover:bg-medical-700 text-white rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 touch-btn">
@@ -732,7 +746,7 @@
         <!-- TAB 2: ÉVOLUTIONS JOURNALIÈRES -->
         <div id="tab-content-evo" class="hidden space-y-4">
           <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-            <div class="flex items-center justify-between border-b pb-2">
+            <div class="flex items-center justify-between border-b pb-2 flex-wrap gap-2">
               <h4 class="text-xs font-bold uppercase tracking-wider text-medical-600 flex items-center gap-1.5">
                 <i class="fa-solid fa-notes-medical"></i> Saisie Évolution Journalière du Patient
               </h4>
@@ -741,86 +755,86 @@
 
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
               <h5 class="font-bold text-slate-700"><i class="fa-solid fa-file-contract text-medical-600"></i> 1. Résumé Syndromique du Jour</h5>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
-                  <label class="font-medium text-slate-500">Jour d'hospitalisation</label>
-                  <input type="text" id="evo-jour-tag" placeholder="ex: J2 d'hospitalisation" class="w-full p-2 border rounded-lg font-semibold">
+                  <label class="font-medium text-slate-500 block mb-1">Jour d'hospitalisation</label>
+                  <input type="text" id="evo-jour-tag" placeholder="ex: J2 d'hospitalisation" class="w-full p-2 border rounded-lg font-semibold bg-white">
                 </div>
-                <div class="col-span-2">
-                  <label class="font-medium text-slate-500">Résumé synthétique / fait marquant</label>
-                  <input type="text" id="evo-resume-text" placeholder="ex: Patient stable" class="w-full p-2 border rounded-lg">
+                <div class="sm:col-span-2">
+                  <label class="font-medium text-slate-500 block mb-1">Résumé synthétique / fait marquant</label>
+                  <input type="text" id="evo-resume-text" placeholder="ex: Patient stable" class="w-full p-2 border rounded-lg bg-white">
                 </div>
               </div>
             </div>
 
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between flex-wrap gap-2">
                 <h5 class="font-bold text-slate-700"><i class="fa-solid fa-brain text-medical-600"></i> 2. Examen Psychiatrique du Jour</h5>
-                <label class="flex items-center gap-1 text-[11px] text-medical-700 bg-white px-2 py-1 rounded border cursor-pointer font-semibold">
+                <label class="flex items-center gap-1.5 text-[11px] text-medical-700 bg-white px-2.5 py-1.5 rounded-lg border cursor-pointer font-semibold">
                   <input type="checkbox" onchange="toggleAutoPsyEvo(this)"> Remplissage auto
                 </label>
               </div>
 
               <div class="space-y-2">
                 <span class="font-semibold text-slate-600 block">A. Présentation / Contact / Comportement :</span>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Tenue adaptée"> Tenue adaptée</label>
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Hypomimie"> Hypomimie</label>
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Contact facile"> Contact facile</label>
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip" value="Pas d'agitation"> Pas d'agitation</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip flex-shrink-0" value="Tenue adaptée"> <span>Tenue adaptée</span></label>
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip flex-shrink-0" value="Hypomimie"> <span>Hypomimie</span></label>
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip flex-shrink-0" value="Contact facile"> <span>Contact facile</span></label>
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pres-chip flex-shrink-0" value="Pas d'agitation"> <span>Pas d'agitation</span></label>
                 </div>
-                <textarea id="evo-pres-free" rows="1" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+                <textarea id="evo-pres-free" rows="1.5" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
               </div>
 
               <div class="space-y-2">
                 <span class="font-semibold text-slate-600 block">B. Conduites instinctuelles :</span>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5">
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip" value="Sphincters normaux"> Sphincters normaux</label>
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip" value="Sommeil conservé 8h"> Sommeil conservé (8h)</label>
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip" value="Alimentation normale"> Alimentation normale</label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip flex-shrink-0" value="Sphincters normaux"> <span>Sphincters normaux</span></label>
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip flex-shrink-0" value="Sommeil conservé 8h"> <span>Sommeil conservé (8h)</span></label>
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-inst-chip flex-shrink-0" value="Alimentation normale"> <span>Alimentation normale</span></label>
                 </div>
-                <textarea id="evo-inst-free" rows="1" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+                <textarea id="evo-inst-free" rows="1.5" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
               </div>
 
               <div class="space-y-2">
                 <span class="font-semibold text-slate-600 block">C. Fonctions supérieures & Pensée :</span>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Langage fluide"> Langage fluide</label>
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Mémoire intacte"> Mémoire intacte</label>
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Cours pensée normal"> Cours pensée normal</label>
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip" value="Pas d'hallucination"> Pas d'hallucination</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip flex-shrink-0" value="Langage fluide"> <span>Langage fluide</span></label>
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip flex-shrink-0" value="Mémoire intacte"> <span>Mémoire intacte</span></label>
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip flex-shrink-0" value="Cours pensée normal"> <span>Cours pensée normal</span></label>
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-pens-chip flex-shrink-0" value="Pas d'hallucination"> <span>Pas d'hallucination</span></label>
                 </div>
-                <textarea id="evo-pens-free" rows="1" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+                <textarea id="evo-pens-free" rows="1.5" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
               </div>
 
               <div class="space-y-2">
                 <span class="font-semibold text-slate-600 block">D. Affects & Humeur :</span>
-                <div class="grid grid-cols-2 gap-1.5">
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-aff-chip" value="Humeur athymique"> Humeur athymique</label>
-                  <label class="flex items-center gap-1 bg-white p-2 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-aff-chip" value="Pas d'anxiété"> Pas d'anxiété</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-aff-chip flex-shrink-0" value="Humeur athymique"> <span>Humeur athymique</span></label>
+                  <label class="flex items-center gap-2 bg-white p-2.5 rounded-lg border cursor-pointer"><input type="checkbox" class="evo-aff-chip flex-shrink-0" value="Pas d'anxiété"> <span>Pas d'anxiété</span></label>
                 </div>
-                <textarea id="evo-aff-free" rows="1" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+                <textarea id="evo-aff-free" rows="1.5" placeholder="✎ Précisions..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
               </div>
             </div>
 
             <div class="p-3 bg-slate-50 rounded-xl border space-y-3 text-xs">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between flex-wrap gap-2">
                 <h5 class="font-bold text-slate-700"><i class="fa-solid fa-stethoscope text-medical-600"></i> 3. Examen Physique & Neurologique du Jour</h5>
-                <label class="flex items-center gap-1 text-[11px] text-medical-700 bg-white px-2 py-1 rounded border cursor-pointer font-semibold">
+                <label class="flex items-center gap-1.5 text-[11px] text-medical-700 bg-white px-2.5 py-1.5 rounded-lg border cursor-pointer font-semibold">
                   <input type="checkbox" onchange="toggleAutoPhyEvo(this)"> Remplissage auto
                 </label>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Bon état général, apyrétique"> Bon état général, apyrétique</label>
-                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Cardiovasculaire normal"> Cardiovasculaire normal</label>
-                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Pulmonaire normal"> Pulmonaire normal</label>
-                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Abdomen souple, indolore"> Abdomen souple, indolore</label>
-                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Conscient, Glasgow 15/15"> Conscient, GCS 15/15</label>
-                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Paires crâniennes I à XII intactes"> Paires crâniennes I à XII intactes</label>
-                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Force 5/5 MRC aux 4 membres, ROT normaux"> Force 5/5 MRC, ROT normaux</label>
-                <label class="flex items-center gap-1 p-2 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip" value="Aires ganglionnaires libres"> Aires ganglionnaires libres</label>
+                <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip flex-shrink-0" value="Bon état général, apyrétique"> <span>Bon état général, apyrétique</span></label>
+                <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip flex-shrink-0" value="Cardiovasculaire normal"> <span>Cardiovasculaire normal</span></label>
+                <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip flex-shrink-0" value="Pulmonaire normal"> <span>Pulmonaire normal</span></label>
+                <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip flex-shrink-0" value="Abdomen souple, indolore"> <span>Abdomen souple, indolore</span></label>
+                <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip flex-shrink-0" value="Conscient, Glasgow 15/15"> <span>Conscient, GCS 15/15</span></label>
+                <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip flex-shrink-0" value="Paires crâniennes I à XII intactes"> <span>Paires crâniennes I à XII intactes</span></label>
+                <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip flex-shrink-0" value="Force 5/5 MRC aux 4 membres, ROT normaux"> <span>Force 5/5 MRC, ROT normaux</span></label>
+                <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border cursor-pointer"><input type="checkbox" class="evo-phy-chip flex-shrink-0" value="Aires ganglionnaires libres"> <span>Aires ganglionnaires libres</span></label>
               </div>
-              <textarea id="evo-phy-free" rows="1.5" placeholder="✎ Précisions examens physiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
+              <textarea id="evo-phy-free" rows="2" placeholder="✎ Précisions examens physiques..." class="w-full p-2 border rounded-lg bg-white mt-1"></textarea>
             </div>
 
             <div class="p-3 bg-slate-50 rounded-xl border space-y-2 text-xs">
@@ -829,21 +843,21 @@
             </div>
 
             <div class="p-3 bg-sky-50/60 rounded-xl border border-sky-100 space-y-2 text-xs">
-              <div class="flex items-center justify-between flex-wrap gap-1">
+              <div class="flex items-center justify-between flex-wrap gap-2">
                 <h5 class="font-bold text-sky-800"><i class="fa-solid fa-pen-nib text-sky-600"></i> 5. Présentation de l'Évolution (Rédigée & Affinée)</h5>
                 <div class="flex gap-1.5">
-                  <button onclick="generateEvolutionText()" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
+                  <button onclick="generateEvolutionText()" class="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
                     Générer / Actualiser
                   </button>
-                  <button onclick="generateEvolutionWithAI()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
+                  <button onclick="generateEvolutionWithAI()" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
                     🤖 IA Évol.
                   </button>
                 </div>
               </div>
-              <textarea id="evo-presentation-text" rows="3" placeholder="Texte synthétique et rédigé de l'évolution du jour..." class="w-full p-2.5 border border-sky-200 rounded-xl bg-white font-mono text-xs"></textarea>
+              <textarea id="evo-presentation-text" rows="4" placeholder="Texte synthétique et rédigé de l'évolution du jour..." class="w-full p-2.5 border border-sky-200 rounded-xl bg-white font-mono text-xs"></textarea>
             </div>
 
-            <div class="flex gap-2 pt-2">
+            <div class="flex flex-col sm:flex-row gap-2 pt-2">
               <button onclick="addEvolutionEntry()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow flex items-center justify-center gap-1.5 touch-btn">
                 <i class="fa-solid fa-plus-circle"></i> Enregistrer l'Évolution
               </button>
@@ -858,8 +872,8 @@
 
         <!-- TAB 3: FICHE DE PRÉSENTATION -->
         <div id="tab-content-fiche" class="hidden space-y-4">
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-6 text-sm leading-relaxed">
-            <div class="flex items-center justify-between border-b pb-3">
+          <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 space-y-6 text-sm leading-relaxed">
+            <div class="flex items-center justify-between border-b pb-3 flex-wrap gap-2">
               <div>
                 <h3 class="font-bold text-medical-700 text-base flex items-center gap-2">
                   <i class="fa-solid fa-file-medical-alt"></i> Fiche d'Évolution Clinique Rédigée (Staff)
@@ -881,8 +895,8 @@
     </main>
 
     <!-- Bottom Navigation -->
-    <footer class="bg-white border-t border-slate-200 fixed bottom-0 left-0 right-0 z-30">
-      <div class="max-w-5xl mx-auto grid grid-cols-3 p-1.5 gap-1">
+    <footer class="bg-white border-t border-slate-200 fixed bottom-0 left-0 right-0 z-30 shadow-sm">
+      <div class="max-w-6xl mx-auto grid grid-cols-3 p-1.5 gap-1">
         <button onclick="switchView('rooms')" id="nav-btn-rooms" class="py-2 flex flex-col items-center text-slate-500 font-medium text-xs rounded-xl hover:bg-slate-50">
           <i class="fa-solid fa-bed-pulse text-base"></i>
           <span>Salles & Lits</span>
@@ -925,7 +939,7 @@
   </div>
 
   <!-- TIROIR BRAINSTORMING IA -->
-  <div id="messenger-window" class="hidden fixed bottom-16 right-2 sm:right-6 z-50 w-[94vw] sm:w-[420px] h-[540px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden transition-all">
+  <div id="messenger-window" class="hidden fixed bottom-16 right-2 sm:right-6 z-50 w-[94vw] sm:w-[420px] h-[540px] max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden transition-all">
     <div class="bg-gradient-to-r from-indigo-700 to-medical-700 p-3.5 text-white flex items-center justify-between shadow-md">
       <div class="flex items-center gap-2.5">
         <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sky-200 text-lg">
@@ -1226,7 +1240,7 @@
     }
 
     // =========================================================================
-    // SQUELETTE STRICT DE L'OBSERVATION EN PSYCHIATRIE (FORME À SUIVRE À LA LETTRE)
+    // SQUELETTE STRICT DE L'OBSERVATION EN PSYCHIATRIE (RÉDACTION A -> Z)
     // =========================================================================
     const PSYCHIATRIE_SKELETON_TEMPLATE = `L'observation en psychiatrie
 NB: le choix du plan suivi pour l'énumération des différents questions à poser et des différents fonctions à examiner est arbitraire. Il est impossible de suivre d'une façon ordonnée au cours d'un entretien, sa présentation a un but purement didactique.
@@ -1250,58 +1264,58 @@ Motif d'hospitalisation :
 ATCD :
 ➡ Personnels :
   • Médicaux : {{atcdMed}}
-  • Chirurgicaux : [À renseigner]
+  • Chirurgicaux : 
   • Psychiatriques : hospitalisations antérieures et suivi : {{atcdPsy}}
   • Habitudes toxiques : quantité et durée : {{atcdTox}}
   • Gyneco-obstetricaux : si femme : {{atcdGyneco}}
-  • Juridiques : [À renseigner]
-➡ Familiaux : [À renseigner]
+  • Juridiques : 
+➡ Familiaux : 
 
-Biographie (Recueillie auprès de : [À renseigner]) :
+Biographie (Recueillie auprès de : ) :
 {{biographie}}
 - Grossesse et naissance :
-  • Grossesse est elle désirée ? [À renseigner]
-  • Déroulement de la grossesse : [À renseigner]
-  • Déroulement de l'accouchement : [À renseigner]
+  • Grossesse est elle désirée ? 
+  • Déroulement de la grossesse : 
+  • Déroulement de l'accouchement : 
 - Développement psychomoteur :
-  • Allaitement maternel ? [À renseigner]
-  • Diversification alimentaire ? [À renseigner]
-  • Position assise qd ? [À renseigner]
-  • Début de la parole : [À renseigner]
-  • Marche (18mois) : [À renseigner]
+  • Allaitement maternel ? 
+  • Diversification alimentaire ? 
+  • Position assise qd ? 
+  • Début de la parole : 
+  • Marche (18mois) : 
   • Circoncision : age (si garçon) : {{circoncision}}
 - Vie scolaire :
-  • Début : [À renseigner]
-  • Ecole coranique? publique ? privée ? [À renseigner]
-  • Brillant? moyen ?... [À renseigner]
-  • Relation avec ses camarades ? [À renseigner]
-  • Relation avec ses professeurs ? [À renseigner]
+  • Début : 
+  • Ecole coranique? publique ? privée ? 
+  • Brillant? moyen ?... 
+  • Relation avec ses camarades ? 
+  • Relation avec ses professeurs ? 
 - Puberté et scolarité :
-  • Age de la puberté : [À renseigner]
-  • Premier rapport sexuel : ami(e), prostitué, viol... [À renseigner]
-  • Début des relations amoureuses : [À renseigner]
+  • Age de la puberté : 
+  • Premier rapport sexuel : ami(e), prostitué, viol... 
+  • Début des relations amoureuses : 
 - Vie professionnelle :
-  • 1er travail ? a quel age ? [À renseigner]
-  • Satisfaction du travail ou non : [À renseigner]
-  • Relation avec ses collègues et patrons : [À renseigner]
+  • 1er travail ? a quel age ? 
+  • Satisfaction du travail ou non : 
+  • Relation avec ses collègues et patrons : 
 - Personnalité du malade et entourage socio-économique :
   • Fratrie : {{fratrie}}
-  • Relations avec les parents et les frères : [À renseigner]
-  • Amitiés : [À renseigner]
-  • Nombre d'amis : [À renseigner]
-  • Capacité d'établir des liens durables : [À renseigner]
-  • Capacité de maintenir des relations stables : [À renseigner]
-  • Intelligence : [À renseigner]
-  • Hygiène corporelle et vestimentaire : [À renseigner]
-  • Faculté d'adaptation aux changements de lieux (voyages) : [À renseigner]
-  • Réaction aux frustrations, aux contraintes : [À renseigner]
+  • Relations avec les parents et les frères : 
+  • Amitiés : 
+  • Nombre d'amis : 
+  • Capacité d'établir des liens durables : 
+  • Capacité de maintenir des relations stables : 
+  • Intelligence : 
+  • Hygiène corporelle et vestimentaire : 
+  • Faculté d'adaptation aux changements de lieux (voyages) : 
+  • Réaction aux frustrations, aux contraintes : 
 
 Histoire de la maladie :
-- Début : [À renseigner]
-- Facteurs déclenchants : [À renseigner]
+- Début : 
+- Facteurs déclenchants : 
 - Chronologie (du plus récent au plus ancien avant l'hospitalisation, sans termes médicaux) :
 {{hdm}}
-- Evolution de l'état actuel : [À renseigner]
+- Evolution de l'état actuel : 
 
 Examen psychiatrique :
 - TROUBLE DE LA PRESENTATION/
@@ -1313,35 +1327,35 @@ Examen psychiatrique :
   • Contrôle sphinctérien de la miction et de la défécation : {{psyInst}}
   • Sommeil : insomnie, somnolence diurne, hypersomnie, perturbation de l'activité onirique : {{psyInst}}
   • Conduites alimentaires (Restrictions alimentaires, Refus alimentaires, Excès alimentaires et excès de boissons) : {{psyInst}}
-  • Comportement sexuel et relations amoureuses : masturbation, impuissance... : [À renseigner]
+  • Comportement sexuel et relations amoureuses : masturbation, impuissance... : 
 - TROUBLES DES CONDUITES SOCIALES
-  • Suicide, tentative de suicide, équivalents suicidaires : [À renseigner]
-  • Les fugues : [À renseigner]
-  • Les vols pathologiques : [À renseigner]
-  • Les attentats aux mœurs : [À renseigner]
-  • L'homicide : [À renseigner]
+  • Suicide, tentative de suicide, équivalents suicidaires : 
+  • Les fugues : 
+  • Les vols pathologiques : 
+  • Les attentats aux mœurs : 
+  • L'homicide : 
 - CONDUITES ADDICCTIVES
   • Alcoolisme : {{atcdTox}}
   • Toxicomanie : {{atcdTox}}
 - TROUBLES DES FONCTIONS SUPERIEURES
   • Troubles du Langage :
-    - Logorrhée, mutisme, mutacisme, bégaiement, palilalie : [À renseigner]
-    - Aphasies : [À renseigner]
-    - Dans sa fonction : sémantique, linguistique, paralogisme, néologisme : [À renseigner]
+    - Logorrhée, mutisme, mutacisme, bégaiement, palilalie : 
+    - Aphasies : 
+    - Dans sa fonction : sémantique, linguistique, paralogisme, néologisme : 
   • Troubles de la mémoire :
-    - Déficit mnésique : amnésie de fixation, antéro-retrograde, psychogène ou affective : [À renseigner]
-    - Paramnésies : [À renseigner]
-    - Illusions de la mémoire : [À renseigner]
+    - Déficit mnésique : amnésie de fixation, antéro-retrograde, psychogène ou affective : 
+    - Paramnésies : 
+    - Illusions de la mémoire : 
   • Troubles du fonctionnement de la pensée et du jugement :
     - Troubles du cours de la pensée (Tachy-bradypsychie, Cohérence des idées, Coq à l'ane) : {{psyPens}}
-    - Troubles du contenu de la pensée (Pensée déréelle, Idées fixes / obsédantes / délirantes / dépressives, Mythomanie, Phobies, idées délirantes) : [À renseigner]
-    - Distorsion globale de la pensée (Autistique, Magique, Paralogique, Rationalisme morbide) : [À renseigner]
-    - Troubles du jugement (Facilitation du jugement, Carence du jugement, Distorsion du jugement) : [À renseigner]
+    - Troubles du contenu de la pensée (Pensée déréelle, Idées fixes / obsédantes / délirantes / dépressives, Mythomanie, Phobies, idées délirantes) : 
+    - Distorsion globale de la pensée (Autistique, Magique, Paralogique, Rationalisme morbide) : 
+    - Troubles du jugement (Facilitation du jugement, Carence du jugement, Distorsion du jugement) : 
   • Troubles des activités perceptives :
-    - Illusions, hallucinations (Psychosensorielles, Psychiques, Absence de subjectivité, Absence de sensorialité, Sd d'influence, Sd d'automatisme mental, Phénomène de dédoublement, Triple automatisme moteur, idéique et idéoverbal, Echo de la pensée) : [À renseigner]
+    - Illusions, hallucinations (Psychosensorielles, Psychiques, Absence de subjectivité, Absence de sensorialité, Sd d'influence, Sd d'automatisme mental, Phénomène de dédoublement, Triple automatisme moteur, idéique et idéoverbal, Echo de la pensée) : 
   • Conscience du soi et de l'environnement :
-    - Troubles de la vigilance (Conscience, attention, orientation temporo-spaciale, Hypo ou hyper vigilance, Etats crépusculaires, Etats seconds, Etats oniroïdes) : [À renseigner]
-    - Troubles de la conscience de soi (Trouble du schéma et de l'éprouvé corporel, Dépersonnalisation, Déréalisation, Sensation de mi fantôme) : [À renseigner]
+    - Troubles de la vigilance (Conscience, attention, orientation temporo-spaciale, Hypo ou hyper vigilance, Etats crépusculaires, Etats seconds, Etats oniroïdes) : 
+    - Troubles de la conscience de soi (Trouble du schéma et de l'éprouvé corporel, Dépersonnalisation, Déréalisation, Sensation de mi fantôme) : 
 - Trouble de l'expression des affects :
   • Hyperémotivité, Défaut d'émotivité, Inadéquation : {{psyAff}}
   • Troubles de l'humeur : Dépressive, Expansive, Athymique : {{psyAff}}
@@ -1355,12 +1369,12 @@ Examen physique :
 - Compléments somatiques (État général, Abdomen, Aires ganglionnaires) : {{examenPhy}}
 
 Conclusion :
-- Résumé syndromique : [À renseigner]
-- Discussion diagnostique : [À renseigner]
+- Résumé syndromique : 
+- Discussion diagnostique : 
 - Conduite à tenir : {{traitement}}
-- Évolution : [À renseigner]
-- Surveillance : [À renseigner]
-- pronostic : [À renseigner]`;
+- Évolution : 
+- Surveillance : 
+- pronostic : `;
 
     // =========================================================================
     // EXEMPLES FEW-SHOT POUR L'IA (VOUS POUVEZ AJOUTER D'AUTRES EXEMPLES ICI)
@@ -1374,32 +1388,49 @@ Conclusion :
     ];
 
     // =========================================================================
-    // PROMPT SYSTÈME ET UTILISATEUR POUR LA GÉNÉRATION PAR L'IA
+    // PROMPT SYSTÈME ET UTILISATEUR POUR LA GÉNÉRATION PAR L'IA (A -> Z)
     // =========================================================================
     const AI_PROMPTS_CONFIG = {
       observation: {
         system: `Tu es un assistant clinicien senior expert en psychiatrie et neurologie.
-Ta mission est de rédiger une observation médicale hospitalière en suivant À LA LETTRE la forme exacte du squelette fourni.
+Ta mission est de rédiger une observation médicale complète de A à Z en suivant la structure du squelette fourni, SANS JAMAIS écrire "[À renseigner]" ni faire de réécriture stylistique non demandée sur les éléments déjà rédigés avec soin.
 
 RÈGLES ABSOLUES À RESPECTER :
-1. FORME DU SQUELETTE : Conserve strictement toutes les rubriques et sous-rubriques dans l'ordre exact du modèle ("L'observation en psychiatrie" -> Identité -> Motif d'hospitalisation -> ATCD -> Biographie -> Histoire de la maladie -> Examen psychiatrique -> Examen physique -> Conclusion).
+1. RÉDACTION DE A À Z SANS "[À RENSEIGNER]" :
+   - N'écris JAMAIS "[À renseigner]" nulle part dans ta réponse.
+   - Rédige l'observation complète de A à Z de façon claire et continue à partir des données fournies.
+   - RÈGLE ANTI-INVENTION STRICTE : N'invente JAMAIS de constantes vitales, dates, antécédents, posologies, résultats d'examens complémentaires ou faits cliniques absents des données brutes. Si un point n'est pas précisé dans les données, indique simplement "Non rapporté" ou "Non précisé" (ou "Sans objet" si non applicable au sexe).
 2. HISTOIRE DE LA MALADIE (HDM) :
-   - Le clinicien saisit des mots-clés médicaux (ex: "insomnie totale", "hallucinations", "anorexie", "apyrétique").
-   - INTERDICTION FORMELLE D'UTILISER DES TERMES MÉDICAUX OU SÉMIOLOGIQUES dans l'Histoire de la maladie (n'écris JAMAIS "insomnie", "hallucination", "délire", "anorexie", "apyrétique", "asthénie", etc.). Traduis chaque symptôme en faits concrets observables, paroles rapportées et comportements vécus au conditionnel ("aurait...", "disait que...", "n'aurait pas du tout dormi la nuit...").
-   - CHRONOLOGIE : Organise le récit de l'Histoire de la maladie du PLUS RÉCENT au PLUS ANCIEN avant son hospitalisation, en précisant le contexte d'apparition.
-   - SIGNES NÉGATIFS : Intègre naturellement les signes négatifs infectieux et généraux (absence de fièvre, de frissons, de douleurs, maintien ou non de l'état général) en langage courant SANS JAMAIS employer de mot médical.
-   - Inspire-toi fidèlement du style narratif des exemples fournis.
-3. RÉSUMÉ SYNDROMIQUE (dans Conclusion) :
-   - Contrairement à l'HDM, rédige un Résumé syndromique court, rigoureux et en langage sémiologique/médical précis regroupant les grands syndromes retrouvés et le terrain/contexte d'hospitalisation.
-4. CHAMPS MANQUANTS : Si une information du squelette n'est pas présente dans les données brutes, laisse "[À renseigner]" sans inventer de faits cliniques.
-5. SORTIE PROPRE : Aucune phrase d'introduction, aucun commentaire, aucune balise markdown \`\`\`.`,
+   - INTERDICTION FORMELLE D'UTILISER DES TERMES MÉDICAUX OU SÉMIOLOGIQUES dans l'Histoire de la maladie (n'écris JAMAIS "insomnie", "hallucination", "délire", "anorexie", "apyrétique", "asthénie", "agitation", etc.).
+   - Traduis les symptômes et cases cochées en faits concrets observables, paroles rapportées et comportements vécus au conditionnel ("aurait...", "disait que...", "n'aurait pas dormi...").
+   - Organise la chronologie du PLUS RÉCENT au PLUS ANCIEN avant l'hospitalisation, en intégrant naturellement les signes négatifs (absence de fièvre, de douleurs, etc.) en langage courant.
+3. EXAMEN PHYSIQUE & EXAMEN PSYCHIATRIQUE (APPAREIL PAR APPAREIL + EXAMENS NORMAUX & SIGNES NÉGATIFS) :
+   - Rédige chaque appareil somatique/neurologique (cardiovasculaire, pleuropulmonaire, abdominal, neurologique, aires ganglionnaires, constantes) et chaque rubrique de l'examen psychiatrique sous forme de rédaction clinique claire.
+   - Lorsque l'examen d'un appareil ou d'une rubrique est normal ou que des éléments négatifs sont cochés/rapportés, formule explicitement qu'il est normal / sans anomalie notable et mentionne les signes négatifs pertinents cohérents avec les données fournies (sans inventer d'anomalies absentes).
+4. RÉSUMÉ SYNDROMIQUE & ANOMALIES (DANS CONCLUSION) :
+   - Rédige un Résumé syndromique précis en langage sémiologique/médical.
+   - Lorsque des anomalies sont présentes dans les données (HdM, examen physique/neurologique ou examen psychiatrique), regroupe-les en syndromes cliniques précis et indique systématiquement le THÈME lorsqu'il existe (ex. : syndrome délirant à thème mystique, persécutoire, grandeur, jalousie, somaticité ; syndrome dissociatif ; syndrome maniaque ou dépressif ; syndrome pyramidal, confusionnel, etc.). S'il n'y a pas d'anomalie décrite sur un point, n'invente aucun syndrome.
+5. SORTIE PROPRE :
+   - Aucune phrase d'introduction, aucun commentaire hors observation, aucune balise markdown \`\`\`.`,
 
         buildUserPrompt: (formData, filledSkeleton) => {
-          const formattedExamples = AI_FEW_SHOT_EXAMPLES.map((ex, idx) =>
-            `--- ${ex.titre} ---\nNotes/Mots-clés : ${ex.entree_mots_cles}\nRédaction attendue :\n${ex.sortie_attendue}`
-          ).join('\n\n');
+          const formattedExamples = AI_FEW_SHOT_EXAMPLES.map((ex) =>
+            `--- ${ex.titre} ---
+Notes/Mots-clés : ${ex.entree_mots_cles}
+Rédaction attendue :
+${ex.sortie_attendue}`
+          ).join('
 
-          return `EXEMPLES DE RÉFÉRENCE POUR LE STYLE DE RÉDACTION :\n${formattedExamples}\n\nSQUELETTE STRICT À SUIVRE À LA LETTRE :\n${filledSkeleton}\n\nDONNÉES BRUTES DU PATIENT :\n${JSON.stringify(formData, null, 2)}`;
+');
+
+          return `EXEMPLES DE RÉFÉRENCE POUR LE STYLE DE RÉDACTION :
+${formattedExamples}
+
+SQUELETTE DE RÉFÉRENCE :
+${filledSkeleton}
+
+DONNÉES BRUTES DU PATIENT :
+${JSON.stringify(formData, null, 2)}`;
         }
       }
     };
@@ -1459,7 +1490,7 @@ RÈGLES ABSOLUES À RESPECTER :
     }
 
     function buildStrictObservationDraft(data) {
-      const f = (v) => (v && String(v).trim()) ? String(v).trim() : '[À renseigner]';
+      const f = (v) => (v && String(v).trim()) ? String(v).trim() : '';
 
       return PSYCHIATRIE_SKELETON_TEMPLATE
         .replace('{{nom}}', f(data.nom))
@@ -1477,9 +1508,9 @@ RÈGLES ABSOLUES À RESPECTER :
         .replace('{{atcdMed}}', f(data.atcdMed))
         .replace('{{atcdPsy}}', f(data.atcdPsy))
         .replace(/\{\{atcdTox\}\}/g, f(data.atcdTox))
-        .replace('{{atcdGyneco}}', data.sexe === 'F' ? '[À renseigner]' : 'Non applicable (sexe masculin)')
+        .replace('{{atcdGyneco}}', data.sexe === 'F' ? '' : 'Non applicable (sexe masculin)')
         .replace('{{biographie}}', f(data.biographie))
-        .replace('{{circoncision}}', data.sexe === 'M' ? '[À renseigner]' : 'Non applicable (sexe féminin)')
+        .replace('{{circoncision}}', data.sexe === 'M' ? '' : 'Non applicable (sexe féminin)')
         .replace('{{hdm}}', f(data.hdm))
         .replace(/\{\{psyPres\}\}/g, f(data.psyPres))
         .replace(/\{\{psyInst\}\}/g, f(data.psyInst))
@@ -1568,7 +1599,9 @@ RÈGLES ABSOLUES À RESPECTER :
         throw new Error("Réponse vide ou format inattendu de l'API.");
       }
 
-      return aiText.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
+      return aiText.replace(/^```[a-z]*
+?/i, '').replace(/
+?```$/i, '').replace(/\[À renseigner\]/gi, '').trim();
     }
 
     // ==========================================
@@ -1616,7 +1649,10 @@ RÈGLES ABSOLUES À RESPECTER :
       try {
         const aiEvo = await callSelectedAIProvider(
           "Tu es un assistant clinicien senior en psychiatrie et neurologie. Rédige une évolution journalière hospitalière concise, claire et structurée en français à partir des notes fournies.",
-          `Jour : ${jour || "Non précisé"}\nRésumé : ${resume || "Non précisé"}\nNotes : ${currentPres || resume}\nCAT : ${cat || "À préciser"}`
+          `Jour : ${jour || "Non précisé"}
+Résumé : ${resume || "Non précisé"}
+Notes : ${currentPres || resume}
+CAT : ${cat || "À préciser"}`
         );
         document.getElementById('evo-presentation-text').value = aiEvo;
         showToast("Évolution rédigée par l'IA !");
@@ -1640,7 +1676,8 @@ RÈGLES ABSOLUES À RESPECTER :
 
       try {
         const { Document, Packer, Paragraph, HeadingLevel, AlignmentType } = window.docx;
-        const lines = obsContent.split('\n');
+        const lines = obsContent.split('
+');
         const children = [
           new Paragraph({
             text: "OBSERVATION CLINIQUE EN PSYCHIATRIE",
@@ -1672,7 +1709,9 @@ RÈGLES ABSOLUES À RESPECTER :
       const jour = document.getElementById('evo-jour-tag').value || "J d'hospitalisation";
       const resume = document.getElementById('evo-resume-text').value || "État clinique stable";
       const cat = document.getElementById('evo-cat-text').value || "Poursuite de la prise en charge";
-      const evolutionDraft = `${jour} :\n- Résumé : ${resume}.\n- CAT : ${cat}.`;
+      const evolutionDraft = `${jour} :
+- Résumé : ${resume}.
+- CAT : ${cat}.`;
       document.getElementById('evo-presentation-text').value = evolutionDraft;
       showToast("Présentation de l'évolution générée !");
     }
@@ -1866,11 +1905,11 @@ RÈGLES ABSOLUES À RESPECTER :
       }
       container.innerHTML = filtered.map(p => `
         <div onclick="loadPatientIntoForm('${p.id}')" class="bg-white p-3.5 rounded-2xl border shadow-sm hover:border-sky-400 transition cursor-pointer flex items-center justify-between touch-btn">
-          <div>
-            <h4 class="font-bold text-slate-800 text-sm">${p.nom || 'Patient'} ${p.prenom || ''} (${p.age || '?'} ans)${p.salle || p.lit ? ` — <span class="text-medical-700">${p.salle || ''} ${p.lit || ''}</span>` : ''}</h4>
-            <p class="text-xs text-slate-600 line-clamp-1">${p.motif || 'Sans motif'}</p>
+          <div class="min-w-0 pr-2">
+            <h4 class="font-bold text-slate-800 text-sm truncate">${p.nom || 'Patient'} ${p.prenom || ''} (${p.age || '?'} ans)${p.salle || p.lit ? ` — <span class="text-medical-700">${p.salle || ''} ${p.lit || ''}</span>` : ''}</h4>
+            <p class="text-xs text-slate-600 truncate">${p.motif || 'Sans motif'}</p>
           </div>
-          <button onclick="deletePatient('${p.id}', event)" class="p-2 text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash-can text-sm"></i></button>
+          <button onclick="deletePatient('${p.id}', event)" class="p-2 text-slate-300 hover:text-rose-500 flex-shrink-0"><i class="fa-solid fa-trash-can text-sm"></i></button>
         </div>
       `).join('');
     }
@@ -2208,26 +2247,26 @@ RÈGLES ABSOLUES À RESPECTER :
 
           if (occupant) {
             return `
-              <div onclick="selectBedSlot('${roomName.replace(/'/g, "\\'")}', '${bedName.replace(/'/g, "\\'")}')" class="w-full text-left p-2.5 rounded-xl border transition cursor-pointer touch-btn ${isSelected ? 'border-medical-600 bg-sky-50' : 'border-slate-200 bg-slate-50/70 hover:border-sky-300'}">
+              <div onclick="selectBedSlot('${roomName.replace(/'/g, "\'")}', '${bedName.replace(/'/g, "\'")}')" class="w-full text-left p-2.5 rounded-xl border transition cursor-pointer touch-btn ${isSelected ? 'border-medical-600 bg-sky-50' : 'border-slate-200 bg-slate-50/70 hover:border-sky-300'}">
                 <div class="flex items-center justify-between gap-1">
                   <span class="text-xs font-extrabold text-slate-800"><i class="fa-solid fa-bed text-medical-600 mr-1"></i>${bedName}</span>
                   <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${done ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
                     ${done ? '✓ Validée' : '• À faire'}
                   </span>
                 </div>
-                <div class="text-xs font-semibold text-slate-900 mt-1">${occupant.nom || 'Patient'} ${occupant.prenom || ''}</div>
+                <div class="text-xs font-semibold text-slate-900 mt-1 truncate">${occupant.nom || 'Patient'} ${occupant.prenom || ''}</div>
                 <div class="text-[11px] text-slate-500 truncate">${occupant.motif || 'Sans motif'}</div>
               </div>
             `;
           }
 
           return `
-            <div onclick="selectBedSlot('${roomName.replace(/'/g, "\\'")}', '${bedName.replace(/'/g, "\\'")}')" class="w-full text-left p-2.5 rounded-xl border border-dashed transition cursor-pointer touch-btn flex items-center justify-between gap-2 ${isSelected ? 'border-indigo-600 bg-indigo-50/70' : 'border-slate-300 bg-white hover:border-indigo-400'}">
-              <div>
+            <div onclick="selectBedSlot('${roomName.replace(/'/g, "\'")}', '${bedName.replace(/'/g, "\'")}')" class="w-full text-left p-2.5 rounded-xl border border-dashed transition cursor-pointer touch-btn flex items-center justify-between gap-2 ${isSelected ? 'border-indigo-600 bg-indigo-50/70' : 'border-slate-300 bg-white hover:border-indigo-400'}">
+              <div class="min-w-0">
                 <div class="text-xs font-bold text-slate-700"><i class="fa-solid fa-bed text-slate-400 mr-1"></i>${bedName}</div>
-                <div class="text-[11px] text-indigo-600 font-medium mt-0.5">+ Lit libre — Cliquer pour rédiger</div>
+                <div class="text-[11px] text-indigo-600 font-medium mt-0.5 truncate">+ Lit libre — Cliquer pour rédiger</div>
               </div>
-              <button type="button" onclick="deleteBedFromRoom('${roomName.replace(/'/g, "\\'")}', '${bedName.replace(/'/g, "\\'")}', event)" class="p-1 text-slate-300 hover:text-rose-500" title="Retirer ce lit">
+              <button type="button" onclick="deleteBedFromRoom('${roomName.replace(/'/g, "\'")}', '${bedName.replace(/'/g, "\'")}', event)" class="p-1 text-slate-300 hover:text-rose-500 flex-shrink-0" title="Retirer ce lit">
                 <i class="fa-solid fa-xmark text-xs"></i>
               </button>
             </div>
@@ -2242,7 +2281,7 @@ RÈGLES ABSOLUES À RESPECTER :
               <span><i class="fa-solid fa-door-open text-medical-600 mr-1"></i>${roomName}</span>
               <div class="flex items-center gap-2">
                 <span class="text-[11px] text-slate-400">${sortedBeds.length} lit(s)</span>
-                ${roomName !== 'Salle non assignée' ? `<button type="button" onclick="deleteRoomFromUI('${roomName.replace(/'/g, "\\'")}', event)" class="text-slate-300 hover:text-rose-600" title="Supprimer la salle"><i class="fa-solid fa-trash text-[11px]"></i></button>` : ''}
+                ${roomName !== 'Salle non assignée' ? `<button type="button" onclick="deleteRoomFromUI('${roomName.replace(/'/g, "\'")}', event)" class="text-slate-300 hover:text-rose-600" title="Supprimer la salle"><i class="fa-solid fa-trash text-[11px]"></i></button>` : ''}
               </div>
             </div>
             <div class="space-y-1.5">
@@ -2566,7 +2605,8 @@ RÈGLES ABSOLUES À RESPECTER :
       const text = input.value.trim();
       if (!text) return;
       const chatContainer = document.getElementById('chat-messages');
-      const safeUserText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+      const safeUserText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/
+/g, "<br>");
       chatContainer.innerHTML += `<div class="flex items-start justify-end gap-2"><div class="bg-indigo-600 text-white p-3 rounded-2xl shadow-sm max-w-[85%]">${safeUserText}</div></div>`;
       input.value = '';
       chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -2580,7 +2620,8 @@ RÈGLES ABSOLUES À RESPECTER :
           "Tu es un assistant clinicien senior expert en psychiatrie et neurologie. Réponds de manière précise, structurée et concise en français.",
           text
         );
-        const safeReply = reply.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+        const safeReply = reply.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/
+/g, "<br>");
         const loader = document.getElementById(loadingId);
         if (loader) {
           loader.innerHTML = `<div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">IA</div><div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 text-slate-700 max-w-[85%] leading-relaxed">${safeReply}</div>`;
