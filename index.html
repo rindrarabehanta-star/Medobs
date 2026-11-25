@@ -93,7 +93,7 @@
 
     <!-- Application Header -->
     <header class="bg-medical-700 text-white sticky top-0 z-30 shadow-md">
-      <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-brain text-2xl text-sky-300"></i>
           <div>
@@ -101,7 +101,15 @@
             <span class="text-xs text-sky-200">Saisie Modulaire & Assistant IA</span>
           </div>
         </div>
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+          <button onclick="switchView('rooms')" class="px-2.5 py-1.5 bg-sky-900 hover:bg-sky-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition touch-btn">
+            <i class="fa-solid fa-bed-pulse text-sky-300"></i>
+            <span>Salles & Lits</span>
+          </button>
+          <button onclick="openGroupsModal()" class="px-2.5 py-1.5 bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition touch-btn">
+            <i class="fa-solid fa-people-group"></i>
+            <span class="hidden sm:inline">Groupes</span>
+          </button>
           <button onclick="toggleMessengerBubble()" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition touch-btn">
             <i class="fa-solid fa-comments"></i>
             <span class="hidden sm:inline">Brainstorming</span>
@@ -118,7 +126,7 @@
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 max-w-4xl w-full mx-auto p-4 pb-24 overflow-y-auto">
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 pb-24 overflow-y-auto">
 
       <!-- Toast Notification Box -->
       <div id="toast" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 transition-all">
@@ -158,8 +166,224 @@
         </div>
       </div>
 
+      <!-- VIEW 0: SALLES & LITS (TOURNÉE, ÉVOLUTIONS RÉTROGRADES & OBSERVATION A -> Z) -->
+      <section id="view-rooms" class="space-y-4">
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-bed-pulse text-medical-600"></i> Salles & Lits — Suivi Quotidien
+            </h2>
+            <p class="text-xs text-slate-500" id="rooms-today-label"></p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="rooms-stats-badge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">0 / 0 validés</span>
+            <button onclick="startNewPatient()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow touch-btn">
+              <i class="fa-solid fa-user-plus"></i> Nouveau Patient
+            </button>
+          </div>
+        </div>
+
+        <!-- Barre de création dynamique de Salle et de Lit -->
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-2.5 text-xs items-end">
+          <div class="md:col-span-4 space-y-1">
+            <label class="font-bold text-slate-700 flex items-center gap-1">
+              <i class="fa-solid fa-door-closed text-medical-600"></i> Créer / Ajouter une Salle
+            </label>
+            <div class="flex gap-1.5">
+              <input type="text" id="new-room-name-input" placeholder="ex: Salle A, Unité Femmes..." class="flex-1 px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-medical-500">
+              <button type="button" onclick="createRoomFromUI()" class="px-3 py-2 bg-medical-600 hover:bg-medical-700 text-white rounded-xl font-bold shadow touch-btn whitespace-nowrap">
+                <i class="fa-solid fa-plus"></i> Salle
+              </button>
+            </div>
+          </div>
+
+          <div class="md:col-span-5 space-y-1">
+            <label class="font-bold text-slate-700 flex items-center gap-1">
+              <i class="fa-solid fa-bed text-indigo-600"></i> Ajouter un Lit dans une Salle
+            </label>
+            <div class="flex gap-1.5">
+              <select id="bed-target-room-select" class="px-2.5 py-2 border border-slate-200 rounded-xl bg-slate-50 font-semibold outline-none focus:ring-2 focus:ring-medical-500 max-w-[140px]">
+              </select>
+              <input type="text" id="new-bed-name-input" placeholder="ex: Lit 1, Lit 2, Lit 3..." class="flex-1 px-3 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-medical-500">
+              <button type="button" onclick="addBedToRoomFromUI()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow touch-btn whitespace-nowrap">
+                <i class="fa-solid fa-plus"></i> Lit
+              </button>
+            </div>
+          </div>
+
+          <div class="md:col-span-3 space-y-1">
+            <label class="font-bold text-slate-700 flex items-center gap-1">
+              <i class="fa-solid fa-layer-group text-emerald-600"></i> Génération rapide
+            </label>
+            <button type="button" onclick="addQuickNumberedBeds()" class="w-full py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl font-bold touch-btn">
+              + Ajouter Lits 1 à 5
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- Colonne gauche : Salles et lits -->
+          <div class="lg:col-span-4 space-y-3">
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+              <div class="flex gap-1 text-xs font-bold">
+                <button onclick="setRoomFilter('all')" id="rflt-all" class="flex-1 py-1.5 rounded-lg bg-slate-900 text-white">Tous</button>
+                <button onclick="setRoomFilter('pending')" id="rflt-pending" class="flex-1 py-1.5 rounded-lg bg-amber-100 text-amber-800">À faire</button>
+                <button onclick="setRoomFilter('done')" id="rflt-done" class="flex-1 py-1.5 rounded-lg bg-emerald-100 text-emerald-800">Validés</button>
+              </div>
+              <input type="text" id="room-search-input" oninput="renderRoomsView()" placeholder="Filtrer salle, lit, nom, motif..." class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-medical-500">
+            </div>
+            <div id="rooms-list-container" class="space-y-3 max-h-[70vh] overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- Colonne droite : Détail lit sélectionné -->
+          <div class="lg:col-span-8 space-y-4">
+            <div id="room-empty-state" class="bg-white p-10 rounded-2xl border border-dashed border-slate-300 text-center text-xs text-slate-500">
+              Cliquez sur un <strong>lit</strong> à gauche (ex. <strong>Lit 2</strong>) pour ouvrir immédiatement son <strong>fichier de rédaction à remplir</strong>, consulter l'historique rétrograde et lire l'observation médicale complète de A à Z.
+            </div>
+
+            <!-- Panneau si le lit sélectionné est LIBRE / VIDE : Fichier de rédaction / affectation rapide à remplir -->
+            <div id="room-free-bed-panel" class="hidden bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 id="free-bed-title" class="font-bold text-base text-slate-800">Salle — Lit</h3>
+                    <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">Lit disponible — Fiche de rédaction</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5">Remplissez cette fiche directement pour affecter un patient à ce lit ou créer un nouveau dossier de rédaction.</p>
+                </div>
+                <button type="button" onclick="openFullFormForSelectedBed()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow touch-btn">
+                  <i class="fa-solid fa-up-right-from-square"></i> Ouvrir Observation Complète
+                </button>
+              </div>
+
+              <div class="space-y-3 text-xs">
+                <div>
+                  <label class="font-bold text-slate-700 block mb-1">Affecter un patient existant à ce lit (optionnel)</label>
+                  <select id="free-bed-existing-patient" onchange="prefillExistingPatientForBed()" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 font-semibold outline-none focus:ring-2 focus:ring-medical-500">
+                    <option value="">-- Nouveau dossier patient sur ce lit --</option>
+                  </select>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div>
+                    <label class="font-semibold text-slate-600">Nom du patient</label>
+                    <input type="text" id="free-bed-nom" placeholder="Nom..." class="w-full p-2 border rounded-xl font-semibold">
+                  </div>
+                  <div>
+                    <label class="font-semibold text-slate-600">Prénom</label>
+                    <input type="text" id="free-bed-prenom" placeholder="Prénom..." class="w-full p-2 border rounded-xl font-semibold">
+                  </div>
+                  <div>
+                    <label class="font-semibold text-slate-600">Âge / Sexe</label>
+                    <div class="flex gap-1.5">
+                      <input type="text" id="free-bed-age" placeholder="ex: 32 ans" class="w-2/3 p-2 border rounded-xl">
+                      <select id="free-bed-sexe" class="w-1/3 p-2 border rounded-xl font-semibold bg-white">
+                        <option value="M">M</option>
+                        <option value="F">F</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="font-semibold text-slate-600">Motif d'hospitalisation / d'admission</label>
+                  <input type="text" id="free-bed-motif" placeholder="ex: Agitation psychomotrice, Trouble thymique..." class="w-full p-2 border rounded-xl font-semibold">
+                </div>
+
+                <div>
+                  <label class="font-semibold text-slate-600">Rédaction initiale / Notes cliniques à remplir (HdM, ATCD, Examen)</label>
+                  <textarea id="free-bed-notes" rows="5" placeholder="Rédigez ici les premières notes cliniques, l'histoire de la maladie ou les observations pour ce lit..." class="w-full p-2.5 border rounded-xl bg-slate-50 font-mono text-xs focus:bg-white outline-none focus:ring-2 focus:ring-medical-500"></textarea>
+                </div>
+
+                <div>
+                  <label class="font-semibold text-slate-600">Traitement / Conduite à tenir (CAT) initial(e)</label>
+                  <textarea id="free-bed-cat" rows="2" placeholder="Prescriptions initiales, surveillance..." class="w-full p-2 border rounded-xl font-mono text-xs"></textarea>
+                </div>
+
+                <div class="flex flex-wrap gap-2 pt-1">
+                  <button type="button" onclick="saveBedDraftPatient(false)" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow flex items-center justify-center gap-2 touch-btn">
+                    <i class="fa-solid fa-floppy-disk"></i> Enregistrer sur ce Lit
+                  </button>
+                  <button type="button" onclick="saveBedDraftPatient(true)" class="py-2.5 px-4 bg-medical-600 hover:bg-medical-700 text-white rounded-xl font-bold shadow flex items-center justify-center gap-2 touch-btn">
+                    <i class="fa-solid fa-file-pen"></i> Enregistrer & Compléter Observation
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="room-detail-panel" class="hidden space-y-4">
+              <!-- Bandeau patient + salle/lit + boutons template/IA -->
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h3 id="room-ws-title" class="font-bold text-base text-slate-800">Patient</h3>
+                      <span id="room-ws-status" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full"></span>
+                    </div>
+                    <p id="room-ws-motif" class="text-xs text-slate-500"></p>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-xs">
+                    <input type="text" id="room-ws-salle" placeholder="Salle" class="w-24 px-2 py-1.5 border rounded-lg font-semibold">
+                    <input type="text" id="room-ws-lit" placeholder="Lit" class="w-20 px-2 py-1.5 border rounded-lg font-semibold">
+                    <button onclick="saveRoomBedFromPanel()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold touch-btn">
+                      OK
+                    </button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <button onclick="jumpToEditorTemplate('evo', true)" class="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow flex items-center justify-center gap-2 touch-btn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Modifier l'Évolution (Template + IA)
+                  </button>
+                  <button onclick="jumpToEditorTemplate('obs', true)" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow flex items-center justify-center gap-2 touch-btn">
+                    <i class="fa-solid fa-file-pen"></i> Modifier l'Observation (Template + IA)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Deux sous-blocs : Évolution rétrograde + Observation A à Z -->
+              <div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+                <div class="xl:col-span-7 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-medical-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-calendar-day"></i> Rédaction Évolution du Jour & Rétrograde
+                  </h4>
+                  <div class="p-3 rounded-xl bg-sky-50/70 border border-sky-200 space-y-2 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input type="text" id="room-evo-jour" placeholder="Jour (ex: J3 d'hospitalisation)" class="p-2 bg-white border rounded-lg font-semibold">
+                      <input type="text" id="room-evo-resume" placeholder="Résumé du jour" class="p-2 bg-white border rounded-lg">
+                    </div>
+                    <textarea id="room-evo-presentation" rows="3" placeholder="Rédaction de l'évolution du jour..." class="w-full p-2 bg-white border rounded-lg"></textarea>
+                    <input type="text" id="room-evo-cat" placeholder="Conduite à tenir (CAT)" class="w-full p-2 bg-white border rounded-lg">
+                    <button onclick="validateRoomEvolutionToday()" class="w-full py-2.5 bg-sky-700 hover:bg-sky-800 text-white rounded-xl font-bold shadow flex items-center justify-center gap-2 touch-btn">
+                      <i class="fa-solid fa-circle-check"></i> Valider l'évolution du jour
+                    </button>
+                  </div>
+
+                  <div class="space-y-2">
+                    <span class="text-[11px] font-bold uppercase text-slate-400 block">Historique rétrograde (plus récent en haut)</span>
+                    <div id="room-retrograde-evos" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
+                  </div>
+                </div>
+
+                <div class="xl:col-span-5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                  <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                      <i class="fa-solid fa-file-lines text-emerald-600"></i> Observation Médicale (A → Z)
+                    </h4>
+                    <button onclick="copyRoomObservationAtoZ()" class="text-[11px] px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold">
+                      Copier
+                    </button>
+                  </div>
+                  <pre id="room-full-obs-text" class="whitespace-pre-wrap font-mono text-[11px] leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200 max-h-[460px] overflow-y-auto text-slate-800"></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- VIEW 1: PATIENTS LIST (ACCUEIL) -->
-      <section id="view-list" class="space-y-4">
+      <section id="view-list" class="hidden space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <h2 class="text-base font-bold text-slate-700 flex items-center gap-2">
             <i class="fa-solid fa-users text-medical-600"></i> Mes Patients Suivis (Firebase)
@@ -183,7 +407,7 @@
       <section id="view-form" class="hidden space-y-4">
         
         <!-- Header -->
-        <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between flex-wrap gap-2">
           <div class="flex items-center gap-3">
             <button onclick="switchView('list')" class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 touch-btn">
               <i class="fa-solid fa-arrow-left"></i>
@@ -234,6 +458,14 @@
               <div><label class="font-medium text-slate-500">Fratrie</label><input type="text" id="field-fratrie" placeholder="ex: 2/5..." class="w-full p-2 border rounded-lg"></div>
               <div><label class="font-medium text-slate-500">Originaire de</label><input type="text" id="field-origine" placeholder="Ville..." class="w-full p-2 border rounded-lg"></div>
               <div><label class="font-medium text-slate-500">Nationalité</label><input type="text" id="field-nationalite" value="Malagasy" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Salle</label><input type="text" id="field-salle" placeholder="ex: Salle 1" class="w-full p-2 border rounded-lg"></div>
+              <div><label class="font-medium text-slate-500">Lit</label><input type="text" id="field-lit" placeholder="ex: Lit 02" class="w-full p-2 border rounded-lg"></div>
+              <div class="col-span-2">
+                <label class="font-medium text-slate-500">Partager avec un groupe</label>
+                <select id="field-shared-group" class="w-full p-2 border rounded-lg bg-white">
+                  <option value="">Privé (moi uniquement)</option>
+                </select>
+              </div>
             </div>
             <div class="pt-2">
               <label class="text-xs font-medium text-slate-500">Motif principal d'hospitalisation</label>
@@ -257,7 +489,7 @@
                 <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border cursor-pointer font-bold text-slate-600"><input type="checkbox" id="atcd-tox-none" onchange="checkToxNone(this)"> Aucune habitude toxique</label>
               </div>
 
-              <div id="tox-extra-fields" class="hidden grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-200">
+              <div id="tox-extra-fields" class="hidden grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-slate-200">
                 <div>
                   <label class="font-medium text-slate-500">Date de début / Ancienneté</label>
                   <input type="text" id="atcd-tox-debut" placeholder="ex: Depuis l'adolescence" class="w-full p-2 border rounded-lg bg-white">
@@ -324,7 +556,7 @@
               <button type="button" class="chip bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full text-xs cursor-pointer hover:bg-sky-100 transition-colors" onclick="addTag('Aucun traitement reçu au préalable')">+ Aucun traitement reçu</button>
             </div>
 
-            <textarea id="field-hdm" rows="4" placeholder="Tapez les notes brutes de l'HdM ici..." class="w-full p-2.5 border rounded-xl bg-slate-50 text-xs mt-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
+            <textarea id="field-hdm" rows="4" placeholder="Tapez les notes brutes / mots-clés de l'HdM ici..." class="w-full p-2.5 border rounded-xl bg-slate-50 text-xs mt-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
           </div>
 
           <!-- EXAMEN PHYSIQUE & SOMATIQUE INITIAL (MODÈLE COMPLET INTÉGRÉ) -->
@@ -487,8 +719,8 @@
                 </button>
               </div>
             </div>
-            <p class="text-[11px] text-slate-500">Ce champ assemble tout le dossier. Vous pouvez l'actualiser localement ou via l'API IA sélectionnée.</p>
-            <textarea id="field-obs-medicale" rows="12" placeholder="Cliquez sur '🤖 IA' ou 'Local'..." class="w-full p-3 border border-indigo-200 rounded-xl bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/25 font-mono leading-relaxed"></textarea>
+            <p class="text-[11px] text-slate-500">Ce champ assemble tout le dossier selon le squelette strict d'observation en psychiatrie (et les règles HdM / Résumé syndromique).</p>
+            <textarea id="field-obs-medicale" rows="14" placeholder="Cliquez sur '🤖 IA' ou 'Local'..." class="w-full p-3 border border-indigo-200 rounded-xl bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/25 font-mono leading-relaxed"></textarea>
           </div>
 
           <button onclick="saveCurrentPatient()" class="w-full py-3.5 bg-medical-600 hover:bg-medical-700 text-white rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 touch-btn">
@@ -597,11 +829,16 @@
             </div>
 
             <div class="p-3 bg-sky-50/60 rounded-xl border border-sky-100 space-y-2 text-xs">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between flex-wrap gap-1">
                 <h5 class="font-bold text-sky-800"><i class="fa-solid fa-pen-nib text-sky-600"></i> 5. Présentation de l'Évolution (Rédigée & Affinée)</h5>
-                <button onclick="generateEvolutionText()" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
-                  Générer / Actualiser
-                </button>
+                <div class="flex gap-1.5">
+                  <button onclick="generateEvolutionText()" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
+                    Générer / Actualiser
+                  </button>
+                  <button onclick="generateEvolutionWithAI()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow touch-btn">
+                    🤖 IA Évol.
+                  </button>
+                </div>
               </div>
               <textarea id="evo-presentation-text" rows="3" placeholder="Texte synthétique et rédigé de l'évolution du jour..." class="w-full p-2.5 border border-sky-200 rounded-xl bg-white font-mono text-xs"></textarea>
             </div>
@@ -645,7 +882,11 @@
 
     <!-- Bottom Navigation -->
     <footer class="bg-white border-t border-slate-200 fixed bottom-0 left-0 right-0 z-30">
-      <div class="max-w-4xl mx-auto grid grid-cols-2 p-1.5 gap-1">
+      <div class="max-w-5xl mx-auto grid grid-cols-3 p-1.5 gap-1">
+        <button onclick="switchView('rooms')" id="nav-btn-rooms" class="py-2 flex flex-col items-center text-slate-500 font-medium text-xs rounded-xl hover:bg-slate-50">
+          <i class="fa-solid fa-bed-pulse text-base"></i>
+          <span>Salles & Lits</span>
+        </button>
         <button onclick="switchView('list')" id="nav-btn-list" class="py-2 flex flex-col items-center text-medical-600 font-bold text-xs rounded-xl hover:bg-slate-50">
           <i class="fa-solid fa-list-ul text-base"></i>
           <span>Patients</span>
@@ -656,6 +897,31 @@
         </button>
       </div>
     </footer>
+  </div>
+
+  <!-- MODAL GROUPES DE PARTAGE -->
+  <div id="groups-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-5 space-y-4 text-xs">
+      <div class="flex items-center justify-between border-b pb-2">
+        <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-people-group text-teal-600"></i> Groupes de Suivi & Partage
+        </h3>
+        <button onclick="closeGroupsModal()" class="text-slate-400 hover:text-slate-700 text-base"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="space-y-2">
+        <label class="font-semibold text-slate-600 block">Nom du groupe</label>
+        <input type="text" id="new-group-name" placeholder="ex: Garde Psychiatrie Salle A" class="w-full p-2 border rounded-lg">
+        <label class="font-semibold text-slate-600 block">E-mails des membres (séparés par des virgules)</label>
+        <input type="text" id="new-group-emails" placeholder="collegue1@email.com, collegue2@email.com" class="w-full p-2 border rounded-lg">
+        <button onclick="handleCreateGroup()" class="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold touch-btn">
+          Créer le groupe
+        </button>
+      </div>
+      <div class="space-y-1.5 pt-2 border-t">
+        <span class="font-bold text-slate-500 uppercase text-[10px]">Mes groupes</span>
+        <div id="groups-list-box" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+      </div>
+    </div>
   </div>
 
   <!-- TIROIR BRAINSTORMING IA -->
@@ -711,7 +977,11 @@
       doc, 
       setDoc, 
       deleteDoc, 
-      onSnapshot 
+      onSnapshot,
+      query,
+      where,
+      getDocs,
+      arrayUnion
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -741,7 +1011,15 @@
     window.deleteDoc = deleteDoc;
 
     window.patients = JSON.parse(localStorage.getItem('medobs_patients_local') || '[]');
+    window.groups = JSON.parse(localStorage.getItem('medobs_groups_local') || '[]');
+    window.roomsCatalog = JSON.parse(localStorage.getItem('medobs_rooms_catalog') || 'null') || [
+      { id: 'room_a', name: 'Salle A', beds: ['Lit 1', 'Lit 2', 'Lit 3', 'Lit 4'] },
+      { id: 'room_b', name: 'Salle B', beds: ['Lit 1', 'Lit 2', 'Lit 3', 'Lit 4'] }
+    ];
     window.currentPatientId = null;
+    window.selectedRoomPatientId = null;
+    window.selectedBedSlot = null; // { roomName, bedName }
+    window.roomFilter = 'all';
 
     // Exposition globale des fonctions
     window.handleLogin = handleLogin;
@@ -767,6 +1045,7 @@
     window.generateObservationText = generateObservationText;
     window.generateObservationWithAI = generateObservationWithAI;
     window.generateEvolutionText = generateEvolutionText;
+    window.generateEvolutionWithAI = generateEvolutionWithAI;
     window.toggleToxDetails = toggleToxDetails;
     window.checkToxNone = checkToxNone;
     window.checkPsyNone = checkPsyNone;
@@ -774,29 +1053,102 @@
     window.generateStaffReport = generateStaffReport;
     window.addTag = addTag;
     window.exportToWordDocx = exportToWordDocx;
+    window.setRoomFilter = setRoomFilter;
+    window.renderRoomsView = renderRoomsView;
+    window.selectRoomPatient = selectRoomPatient;
+    window.selectBedSlot = selectBedSlot;
+    window.createRoomFromUI = createRoomFromUI;
+    window.addBedToRoomFromUI = addBedToRoomFromUI;
+    window.addQuickNumberedBeds = addQuickNumberedBeds;
+    window.deleteRoomFromUI = deleteRoomFromUI;
+    window.deleteBedFromRoom = deleteBedFromRoom;
+    window.saveBedDraftPatient = saveBedDraftPatient;
+    window.prefillExistingPatientForBed = prefillExistingPatientForBed;
+    window.openFullFormForSelectedBed = openFullFormForSelectedBed;
+    window.saveRoomBedFromPanel = saveRoomBedFromPanel;
+    window.validateRoomEvolutionToday = validateRoomEvolutionToday;
+    window.jumpToEditorTemplate = jumpToEditorTemplate;
+    window.copyRoomObservationAtoZ = copyRoomObservationAtoZ;
+    window.openGroupsModal = openGroupsModal;
+    window.closeGroupsModal = closeGroupsModal;
+    window.handleCreateGroup = handleCreateGroup;
 
     document.addEventListener("DOMContentLoaded", () => {
+      const todayStr = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const rLabel = document.getElementById('rooms-today-label');
+      if (rLabel) rLabel.innerText = todayStr;
+      syncRoomsCatalogWithPatients();
+      renderGroupOptions();
       updatePatientCount();
       renderPatientsList();
+      renderRoomsView();
     });
 
-    let unsubscribeSnapshot = null;
+    let unsubscribeOwn = null;
+    let unsubscribeShared = null;
+    let unsubscribeGroups = null;
+
+    async function syncUserProfile(user) {
+      if (!db || !user) return;
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          email: (user.email || "").toLowerCase(),
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (_) {}
+    }
+
+    function mergeCloudPatients(docsArray) {
+      const byId = new Map();
+      docsArray.forEach(item => byId.set(item.id, item));
+      window.patients = Array.from(byId.values());
+      localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
+      updatePatientCount();
+      renderPatientsList();
+      renderRoomsView();
+      if (window.selectedRoomPatientId) {
+        selectRoomPatient(window.selectedRoomPatientId);
+      }
+    }
 
     if (auth) {
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          if (window.colRef && !unsubscribeSnapshot) {
-            unsubscribeSnapshot = onSnapshot(window.colRef, (snapshot) => {
-              window.patients = [];
-              snapshot.forEach((docSnap) => {
-                window.patients.push({ id: docSnap.id, ...docSnap.data() });
-              });
-              localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
-              updatePatientCount();
-              renderPatientsList();
-            }, (err) => {
-              console.warn("Écoute Firestore en pause, utilisation du cache local.");
-            });
+      onAuthStateChanged(auth, async (user) => {
+        if (user && db) {
+          await syncUserProfile(user);
+          let ownDocs = [];
+          let sharedDocs = [];
+
+          const recompute = () => mergeCloudPatients([...ownDocs, ...sharedDocs]);
+
+          if (!unsubscribeOwn) {
+            const qOwn = query(collection(db, "patients_medobs"), where("ownerId", "==", user.uid));
+            unsubscribeOwn = onSnapshot(qOwn, (snapshot) => {
+              ownDocs = [];
+              snapshot.forEach((docSnap) => ownDocs.push({ id: docSnap.id, ...docSnap.data() }));
+              recompute();
+            }, () => {});
+          }
+
+          if (!unsubscribeShared) {
+            const qShared = query(collection(db, "patients_medobs"), where("memberIds", "array-contains", user.uid));
+            unsubscribeShared = onSnapshot(qShared, (snapshot) => {
+              sharedDocs = [];
+              snapshot.forEach((docSnap) => sharedDocs.push({ id: docSnap.id, ...docSnap.data() }));
+              recompute();
+            }, () => {});
+          }
+
+          if (!unsubscribeGroups) {
+            const qGroups = query(collection(db, "groups"), where("members", "array-contains", user.uid));
+            unsubscribeGroups = onSnapshot(qGroups, (snapshot) => {
+              const gList = [];
+              snapshot.forEach((docSnap) => gList.push({ id: docSnap.id, ...docSnap.data() }));
+              window.groups = gList;
+              localStorage.setItem('medobs_groups_local', JSON.stringify(window.groups));
+              renderGroupOptions();
+              renderGroupsList();
+            }, () => {});
           }
         }
       });
@@ -805,6 +1157,7 @@
     function bypassAuth() {
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('app-container').classList.remove('hidden');
+      switchView('rooms');
       showToast("Accès direct aux dossiers activé");
     }
 
@@ -849,10 +1202,10 @@
     }
 
     async function handleLogout() {
-      if (unsubscribeSnapshot) {
-        unsubscribeSnapshot();
-        unsubscribeSnapshot = null;
-      }
+      [unsubscribeOwn, unsubscribeShared, unsubscribeGroups].forEach(unsub => { if (unsub) unsub(); });
+      unsubscribeOwn = null;
+      unsubscribeShared = null;
+      unsubscribeGroups = null;
       if (auth) await signOut(auth);
       document.getElementById('app-container').classList.add('hidden');
       document.getElementById('auth-screen').classList.remove('hidden');
@@ -872,86 +1225,279 @@
       }
     }
 
-    function generateObservationText() {
-      const nom = document.getElementById('field-nom').value || '';
-      const prenom = document.getElementById('field-prenom').value || '';
-      const age = document.getElementById('field-age').value || '[Âge]';
-      const sexe = document.getElementById('field-sexe').value === 'M' ? 'Masculin (M)' : 'Féminin (F)';
-      const etatcivil = document.getElementById('field-etatcivil').value || '';
-      const profession = document.getElementById('field-profession').value || '';
-      const fratrie = document.getElementById('field-fratrie').value || '';
-      const origine = document.getElementById('field-origine').value || '';
-      const motif = document.getElementById('field-motif').value || '[Motif d\'hospitalisation]';
-      const biographie = document.getElementById('field-biographie').value || '';
-      const hdm = document.getElementById('field-hdm').value || '[Notes brutes de l\'HdM]';
-      const psy = document.getElementById('atcd-psy-free').value || 'Aucun ATCD psychiatrique particulier';
-      const tox = document.getElementById('atcd-tox-free').value || 'Aucune intoxication rapportée';
-      const med = document.getElementById('atcd-med-free').value || 'Aucun ATCD médical particulier';
-      const traitement = document.getElementById('field-traitement').value || 'Aucun traitement prescrit';
+    // =========================================================================
+    // SQUELETTE STRICT DE L'OBSERVATION EN PSYCHIATRIE (FORME À SUIVRE À LA LETTRE)
+    // =========================================================================
+    const PSYCHIATRIE_SKELETON_TEMPLATE = `L'observation en psychiatrie
+NB: le choix du plan suivi pour l'énumération des différents questions à poser et des différents fonctions à examiner est arbitraire. Il est impossible de suivre d'une façon ordonnée au cours d'un entretien, sa présentation a un but purement didactique.
 
+Identité :
+- Nom : {{nom}}
+- Prénom : {{prenom}}
+- Age : {{age}}
+- Fratrie : {{fratrie}}
+- Originaire de : {{origine}}
+- Etat civil : {{etatcivil}}
+- NSE : {{nse}}
+- Profession : {{profession}}
+- Niveau de scolarité : {{scolarite}}
+- Nationalité : {{nationalite}}
+- Religion : {{religion}}
+
+Motif d'hospitalisation :
+{{motif}}
+
+ATCD :
+➡ Personnels :
+  • Médicaux : {{atcdMed}}
+  • Chirurgicaux : [À renseigner]
+  • Psychiatriques : hospitalisations antérieures et suivi : {{atcdPsy}}
+  • Habitudes toxiques : quantité et durée : {{atcdTox}}
+  • Gyneco-obstetricaux : si femme : {{atcdGyneco}}
+  • Juridiques : [À renseigner]
+➡ Familiaux : [À renseigner]
+
+Biographie (Recueillie auprès de : [À renseigner]) :
+{{biographie}}
+- Grossesse et naissance :
+  • Grossesse est elle désirée ? [À renseigner]
+  • Déroulement de la grossesse : [À renseigner]
+  • Déroulement de l'accouchement : [À renseigner]
+- Développement psychomoteur :
+  • Allaitement maternel ? [À renseigner]
+  • Diversification alimentaire ? [À renseigner]
+  • Position assise qd ? [À renseigner]
+  • Début de la parole : [À renseigner]
+  • Marche (18mois) : [À renseigner]
+  • Circoncision : age (si garçon) : {{circoncision}}
+- Vie scolaire :
+  • Début : [À renseigner]
+  • Ecole coranique? publique ? privée ? [À renseigner]
+  • Brillant? moyen ?... [À renseigner]
+  • Relation avec ses camarades ? [À renseigner]
+  • Relation avec ses professeurs ? [À renseigner]
+- Puberté et scolarité :
+  • Age de la puberté : [À renseigner]
+  • Premier rapport sexuel : ami(e), prostitué, viol... [À renseigner]
+  • Début des relations amoureuses : [À renseigner]
+- Vie professionnelle :
+  • 1er travail ? a quel age ? [À renseigner]
+  • Satisfaction du travail ou non : [À renseigner]
+  • Relation avec ses collègues et patrons : [À renseigner]
+- Personnalité du malade et entourage socio-économique :
+  • Fratrie : {{fratrie}}
+  • Relations avec les parents et les frères : [À renseigner]
+  • Amitiés : [À renseigner]
+  • Nombre d'amis : [À renseigner]
+  • Capacité d'établir des liens durables : [À renseigner]
+  • Capacité de maintenir des relations stables : [À renseigner]
+  • Intelligence : [À renseigner]
+  • Hygiène corporelle et vestimentaire : [À renseigner]
+  • Faculté d'adaptation aux changements de lieux (voyages) : [À renseigner]
+  • Réaction aux frustrations, aux contraintes : [À renseigner]
+
+Histoire de la maladie :
+- Début : [À renseigner]
+- Facteurs déclenchants : [À renseigner]
+- Chronologie (du plus récent au plus ancien avant l'hospitalisation, sans termes médicaux) :
+{{hdm}}
+- Evolution de l'état actuel : [À renseigner]
+
+Examen psychiatrique :
+- TROUBLE DE LA PRESENTATION/
+  • Tenue : apragmatique, adaptée, ongles, cheveux, réticence : {{psyPres}}
+  • Mimique : Hypo, hyper, dys, démarche, regard : {{psyPres}}
+  • Contact : verbal, émotionnel, facile, difficile, superficiel, hyper syntone : {{psyPres}}
+  • Comportement : agitations, impulsions, stupeur, catalepsie, tics : {{psyPres}}
+- TROUBLES DES CONDUITES INSTINCTUELLES
+  • Contrôle sphinctérien de la miction et de la défécation : {{psyInst}}
+  • Sommeil : insomnie, somnolence diurne, hypersomnie, perturbation de l'activité onirique : {{psyInst}}
+  • Conduites alimentaires (Restrictions alimentaires, Refus alimentaires, Excès alimentaires et excès de boissons) : {{psyInst}}
+  • Comportement sexuel et relations amoureuses : masturbation, impuissance... : [À renseigner]
+- TROUBLES DES CONDUITES SOCIALES
+  • Suicide, tentative de suicide, équivalents suicidaires : [À renseigner]
+  • Les fugues : [À renseigner]
+  • Les vols pathologiques : [À renseigner]
+  • Les attentats aux mœurs : [À renseigner]
+  • L'homicide : [À renseigner]
+- CONDUITES ADDICCTIVES
+  • Alcoolisme : {{atcdTox}}
+  • Toxicomanie : {{atcdTox}}
+- TROUBLES DES FONCTIONS SUPERIEURES
+  • Troubles du Langage :
+    - Logorrhée, mutisme, mutacisme, bégaiement, palilalie : [À renseigner]
+    - Aphasies : [À renseigner]
+    - Dans sa fonction : sémantique, linguistique, paralogisme, néologisme : [À renseigner]
+  • Troubles de la mémoire :
+    - Déficit mnésique : amnésie de fixation, antéro-retrograde, psychogène ou affective : [À renseigner]
+    - Paramnésies : [À renseigner]
+    - Illusions de la mémoire : [À renseigner]
+  • Troubles du fonctionnement de la pensée et du jugement :
+    - Troubles du cours de la pensée (Tachy-bradypsychie, Cohérence des idées, Coq à l'ane) : {{psyPens}}
+    - Troubles du contenu de la pensée (Pensée déréelle, Idées fixes / obsédantes / délirantes / dépressives, Mythomanie, Phobies, idées délirantes) : [À renseigner]
+    - Distorsion globale de la pensée (Autistique, Magique, Paralogique, Rationalisme morbide) : [À renseigner]
+    - Troubles du jugement (Facilitation du jugement, Carence du jugement, Distorsion du jugement) : [À renseigner]
+  • Troubles des activités perceptives :
+    - Illusions, hallucinations (Psychosensorielles, Psychiques, Absence de subjectivité, Absence de sensorialité, Sd d'influence, Sd d'automatisme mental, Phénomène de dédoublement, Triple automatisme moteur, idéique et idéoverbal, Echo de la pensée) : [À renseigner]
+  • Conscience du soi et de l'environnement :
+    - Troubles de la vigilance (Conscience, attention, orientation temporo-spaciale, Hypo ou hyper vigilance, Etats crépusculaires, Etats seconds, Etats oniroïdes) : [À renseigner]
+    - Troubles de la conscience de soi (Trouble du schéma et de l'éprouvé corporel, Dépersonnalisation, Déréalisation, Sensation de mi fantôme) : [À renseigner]
+- Trouble de l'expression des affects :
+  • Hyperémotivité, Défaut d'émotivité, Inadéquation : {{psyAff}}
+  • Troubles de l'humeur : Dépressive, Expansive, Athymique : {{psyAff}}
+  • Troubles anxieux : {{psyAff}}
+
+Examen physique :
+- Constantes hémodynamiques : {{constantes}}
+- Cardiovasculaire : {{phyCardio}}
+- Pulmonaire : {{phyPulmo}}
+- Neurologique : {{phyNeuro}}
+- Compléments somatiques (État général, Abdomen, Aires ganglionnaires) : {{examenPhy}}
+
+Conclusion :
+- Résumé syndromique : [À renseigner]
+- Discussion diagnostique : [À renseigner]
+- Conduite à tenir : {{traitement}}
+- Évolution : [À renseigner]
+- Surveillance : [À renseigner]
+- pronostic : [À renseigner]`;
+
+    // =========================================================================
+    // EXEMPLES FEW-SHOT POUR L'IA (VOUS POUVEZ AJOUTER D'AUTRES EXEMPLES ICI)
+    // =========================================================================
+    const AI_FEW_SHOT_EXAMPLES = [
+      {
+        titre: "Exemple 1 - Rédaction narrative de l'Histoire de la maladie (style clinique sans jargon)",
+        entree_mots_cles: "Début lundi 02 novembre, déambulation, hétéro-agressivité entourage, insomnie totale (peur animaux cimetière), mardi 03 nov chez son père, mysticisme/Bible Jérémie 33:3, serre fort son enfant allaité, refus alimentaire (boit juste eau), jeudi 06 nov médecin prescrit Haldol + Largactil refusés, urgences puis référée en psychiatrie, apyrétique/sans fièvre.",
+        sortie_attendue: `La symptomatologie aurait débuté le lundi 02 novembre, quand elle était chez elle faisait des va et viens dans la maison, aurait frappé ses entourage et a refusé de dormir par ce qu’elle aurait vue des animaux qui allait l’emmener au cimetière, elle allait chez son père le lendemain , en voyant son père, elle disait que seul père peut lui guérir, et que son père va la rendre sa mémoire, et répétait sans cesse en tenant la bible et en lisant uniquement a haute voie jeremie 33:3 , et faisait des va et viens ,ensuite ,elle aurait serré très fort son enfant pendant qu’elle allaitait ; la famille aurait prise l’enfant et elle aurait demandé a son père de le reprendre et de le garder ,par ce qu’il vont le tué et l’emmené avec eux , et elle n’aurait pas dutout dormi la nuit depuis et a refuser de manger et buvait uniquement de l’eau, la famille aurait décidé de l’emmener voir un médecin le jeudi 6 novembre qui lui a prescrit haldol et largactyle comprimé mais elle a refusé de les prendre alors la famille a décidé de l’emmener au service d’urgence qui l’a référé dans notre service pour suite de prise en charge.`
+      }
+    ];
+
+    // =========================================================================
+    // PROMPT SYSTÈME ET UTILISATEUR POUR LA GÉNÉRATION PAR L'IA
+    // =========================================================================
+    const AI_PROMPTS_CONFIG = {
+      observation: {
+        system: `Tu es un assistant clinicien senior expert en psychiatrie et neurologie.
+Ta mission est de rédiger une observation médicale hospitalière en suivant À LA LETTRE la forme exacte du squelette fourni.
+
+RÈGLES ABSOLUES À RESPECTER :
+1. FORME DU SQUELETTE : Conserve strictement toutes les rubriques et sous-rubriques dans l'ordre exact du modèle ("L'observation en psychiatrie" -> Identité -> Motif d'hospitalisation -> ATCD -> Biographie -> Histoire de la maladie -> Examen psychiatrique -> Examen physique -> Conclusion).
+2. HISTOIRE DE LA MALADIE (HDM) :
+   - Le clinicien saisit des mots-clés médicaux (ex: "insomnie totale", "hallucinations", "anorexie", "apyrétique").
+   - INTERDICTION FORMELLE D'UTILISER DES TERMES MÉDICAUX OU SÉMIOLOGIQUES dans l'Histoire de la maladie (n'écris JAMAIS "insomnie", "hallucination", "délire", "anorexie", "apyrétique", "asthénie", etc.). Traduis chaque symptôme en faits concrets observables, paroles rapportées et comportements vécus au conditionnel ("aurait...", "disait que...", "n'aurait pas du tout dormi la nuit...").
+   - CHRONOLOGIE : Organise le récit de l'Histoire de la maladie du PLUS RÉCENT au PLUS ANCIEN avant son hospitalisation, en précisant le contexte d'apparition.
+   - SIGNES NÉGATIFS : Intègre naturellement les signes négatifs infectieux et généraux (absence de fièvre, de frissons, de douleurs, maintien ou non de l'état général) en langage courant SANS JAMAIS employer de mot médical.
+   - Inspire-toi fidèlement du style narratif des exemples fournis.
+3. RÉSUMÉ SYNDROMIQUE (dans Conclusion) :
+   - Contrairement à l'HDM, rédige un Résumé syndromique court, rigoureux et en langage sémiologique/médical précis regroupant les grands syndromes retrouvés et le terrain/contexte d'hospitalisation.
+4. CHAMPS MANQUANTS : Si une information du squelette n'est pas présente dans les données brutes, laisse "[À renseigner]" sans inventer de faits cliniques.
+5. SORTIE PROPRE : Aucune phrase d'introduction, aucun commentaire, aucune balise markdown \`\`\`.`,
+
+        buildUserPrompt: (formData, filledSkeleton) => {
+          const formattedExamples = AI_FEW_SHOT_EXAMPLES.map((ex, idx) =>
+            `--- ${ex.titre} ---\nNotes/Mots-clés : ${ex.entree_mots_cles}\nRédaction attendue :\n${ex.sortie_attendue}`
+          ).join('\n\n');
+
+          return `EXEMPLES DE RÉFÉRENCE POUR LE STYLE DE RÉDACTION :\n${formattedExamples}\n\nSQUELETTE STRICT À SUIVRE À LA LETTRE :\n${filledSkeleton}\n\nDONNÉES BRUTES DU PATIENT :\n${JSON.stringify(formData, null, 2)}`;
+        }
+      }
+    };
+
+    function collectFormDataForSkeleton() {
       const getCheckedValues = (selector) => Array.from(document.querySelectorAll(selector + ':checked')).map(el => el.value);
 
-      const genText = [...getCheckedValues('.om-gen-chip'), document.getElementById('om-gen-free').value].filter(Boolean).join(' ') || 'Bon état général, apyrétique, absence de signes de déshydratation et de détresse respiratoire.';
-      const constantes = document.getElementById('om-constantes').value || 'Non renseignées';
-      const cardioText = [...getCheckedValues('.om-cardio-chip'), document.getElementById('om-cardio-free').value].filter(Boolean).join(' / ') || 'Absence de cyanose, absence de turgescence jugulaire, absence d\'œdèmes des membres inférieurs, choc de pointe palpable non dévié, B1/B2 réguliers sans souffle.';
-      const pulmoText = [...getCheckedValues('.om-pulmo-chip'), document.getElementById('om-pulmo-free').value].filter(Boolean).join(' / ') || 'Thorax symétrique, mouvements respiratoires réguliers et symétriques, murmure vésiculaire bien perçu et symétrique, sans râles.';
-      const abdoText = [...getCheckedValues('.om-abdo-chip'), document.getElementById('om-abdo-free').value].filter(Boolean).join(' / ') || 'Abdomen souple, indolore, sans masse palpable ni organomégalie.';
-      const neuroText = [...getCheckedValues('.om-neuro-chip'), document.getElementById('om-neuro-free').value].filter(Boolean).join(' / ') || 'Conscient, vigilant, bien orienté, Glasgow 15/15, paires crâniennes intactes, force musculaire conservée 5/5 MRC aux 4 membres, ROT présents et symétriques, Babinski absent, marche et coordination normales.';
-      const gangText = [...getCheckedValues('.om-gang-chip'), document.getElementById('om-gang-free').value].filter(Boolean).join(' / ') || 'Aires ganglionnaires libres, absence d\'adénopathies périphériques suspectes.';
+      const nom = document.getElementById('field-nom').value || '';
+      const prenom = document.getElementById('field-prenom').value || '';
+      const age = document.getElementById('field-age').value || '';
+      const sexe = document.getElementById('field-sexe').value || 'M';
+      const etatcivil = document.getElementById('field-etatcivil').value || '';
+      const profession = document.getElementById('field-profession').value || '';
+      const nse = document.getElementById('field-nse').value || '';
+      const scolarite = document.getElementById('field-scolarite').value || '';
+      const religion = document.getElementById('field-religion').value || '';
+      const fratrie = document.getElementById('field-fratrie').value || '';
+      const origine = document.getElementById('field-origine').value || '';
+      const nationalite = document.getElementById('field-nationalite').value || 'Malagasy';
+      const motif = document.getElementById('field-motif').value || '';
+      const biographie = document.getElementById('field-biographie').value || '';
+      const hdm = document.getElementById('field-hdm').value || '';
 
-      const presText = [...getCheckedValues('.om-pres-chip'), document.getElementById('om-pres-free').value].filter(Boolean).join(', ');
-      const instText = [...getCheckedValues('.om-inst-chip'), document.getElementById('om-inst-free').value].filter(Boolean).join(', ');
-      const pensText = [...getCheckedValues('.om-pens-chip'), document.getElementById('om-pens-free').value].filter(Boolean).join(', ');
-      const affText = [...getCheckedValues('.om-aff-chip'), document.getElementById('om-aff-free').value].filter(Boolean).join(', ');
+      const psy = [...getCheckedValues('.atcd-psy-chip'), document.getElementById('atcd-psy-free').value].filter(Boolean).join(', ');
+      const toxChips = getCheckedValues('.atcd-tox-chip');
+      const toxDetails = [
+        document.getElementById('atcd-tox-debut')?.value ? `Début: ${document.getElementById('atcd-tox-debut').value}` : '',
+        document.getElementById('atcd-tox-derniere-prise')?.value ? `Dernière prise: ${document.getElementById('atcd-tox-derniere-prise').value}` : '',
+        document.getElementById('atcd-tox-raison-arret')?.value ? `Quantité/Arrêt: ${document.getElementById('atcd-tox-raison-arret').value}` : ''
+      ].filter(Boolean).join(', ');
+      const tox = [...toxChips, toxDetails, document.getElementById('atcd-tox-free').value].filter(Boolean).join(', ');
+      const med = [...getCheckedValues('.atcd-med-chip'), document.getElementById('atcd-med-free').value].filter(Boolean).join(', ');
+      const traitement = document.getElementById('field-traitement').value || '';
 
-      const draft = `OBSERVATION CLINIQUE EN PSYCHIATRIE
+      const constantes = document.getElementById('om-constantes').value || '';
+      const phyCardio = [...getCheckedValues('.om-cardio-chip'), document.getElementById('om-cardio-free').value].filter(Boolean).join(' / ');
+      const phyPulmo = [...getCheckedValues('.om-pulmo-chip'), document.getElementById('om-pulmo-free').value].filter(Boolean).join(' / ');
+      const phyNeuro = [...getCheckedValues('.om-neuro-chip'), document.getElementById('om-neuro-free').value].filter(Boolean).join(' / ');
+      const examenPhy = [
+        ...getCheckedValues('.om-gen-chip'), document.getElementById('om-gen-free').value,
+        ...getCheckedValues('.om-abdo-chip'), document.getElementById('om-abdo-free').value,
+        ...getCheckedValues('.om-gang-chip'), document.getElementById('om-gang-free').value
+      ].filter(Boolean).join(' ');
 
-1. IDENTITÉ
-- Nom & Prénom : ${nom} ${prenom}
-- Âge : ${age} ans | Sexe : ${sexe}
-- État civil : ${etatcivil} | Profession : ${profession}
-- Fratrie : ${fratrie} | Originaire de : ${origine}
+      const psyPres = [...getCheckedValues('.om-pres-chip'), document.getElementById('om-pres-free').value].filter(Boolean).join(', ');
+      const psyInst = [...getCheckedValues('.om-inst-chip'), document.getElementById('om-inst-free').value].filter(Boolean).join(', ');
+      const psyPens = [...getCheckedValues('.om-pens-chip'), document.getElementById('om-pens-free').value].filter(Boolean).join(', ');
+      const psyAff = [...getCheckedValues('.om-aff-chip'), document.getElementById('om-aff-free').value].filter(Boolean).join(', ');
 
-2. MOTIF D'HOSPITALISATION
-> ${motif}
+      return {
+        nom, prenom, age, sexe, etatcivil, profession, nse, scolarite, religion,
+        fratrie, origine, nationalite, motif, biographie, hdm,
+        atcdPsy: psy, atcdTox: tox, atcdMed: med,
+        constantes, phyCardio, phyPulmo, phyNeuro, examenPhy,
+        psyPres, psyInst, psyPens, psyAff, traitement
+      };
+    }
 
-3. ANTÉCÉDENTS (ATCD)
-- Psychiatriques : ${psy}
-- Habitudes toxiques : ${tox}
-- Médicaux : ${med}
+    function buildStrictObservationDraft(data) {
+      const f = (v) => (v && String(v).trim()) ? String(v).trim() : '[À renseigner]';
 
-4. BIOGRAPHIE & PARCOURS DE VIE
-${biographie}
+      return PSYCHIATRIE_SKELETON_TEMPLATE
+        .replace('{{nom}}', f(data.nom))
+        .replace('{{prenom}}', f(data.prenom))
+        .replace('{{age}}', f(data.age))
+        .replace(/\{\{fratrie\}\}/g, f(data.fratrie))
+        .replace('{{origine}}', f(data.origine))
+        .replace('{{etatcivil}}', f(data.etatcivil))
+        .replace('{{nse}}', f(data.nse))
+        .replace('{{profession}}', f(data.profession))
+        .replace('{{scolarite}}', f(data.scolarite))
+        .replace('{{nationalite}}', f(data.nationalite))
+        .replace('{{religion}}', f(data.religion))
+        .replace('{{motif}}', f(data.motif))
+        .replace('{{atcdMed}}', f(data.atcdMed))
+        .replace('{{atcdPsy}}', f(data.atcdPsy))
+        .replace(/\{\{atcdTox\}\}/g, f(data.atcdTox))
+        .replace('{{atcdGyneco}}', data.sexe === 'F' ? '[À renseigner]' : 'Non applicable (sexe masculin)')
+        .replace('{{biographie}}', f(data.biographie))
+        .replace('{{circoncision}}', data.sexe === 'M' ? '[À renseigner]' : 'Non applicable (sexe féminin)')
+        .replace('{{hdm}}', f(data.hdm))
+        .replace(/\{\{psyPres\}\}/g, f(data.psyPres))
+        .replace(/\{\{psyInst\}\}/g, f(data.psyInst))
+        .replace('{{psyPens}}', f(data.psyPens))
+        .replace(/\{\{psyAff\}\}/g, f(data.psyAff))
+        .replace('{{constantes}}', f(data.constantes))
+        .replace('{{phyCardio}}', f(data.phyCardio))
+        .replace('{{phyPulmo}}', f(data.phyPulmo))
+        .replace('{{phyNeuro}}', f(data.phyNeuro))
+        .replace('{{examenPhy}}', f(data.examenPhy))
+        .replace('{{traitement}}', f(data.traitement));
+    }
 
-5. HISTOIRE DE LA MALADIE (HDM)
-${hdm}
-
-6. EXAMEN PHYSIQUE & SOMATIQUE
-- État général : ${genText}
-  -> Conclusion : Patient en bon état général, stable.
-- Constantes Vitales : ${constantes}
-- Appareil Cardiovasculaire : ${cardioText}
-  -> Conclusion : Examen cardiovasculaire sans particularité.
-- Appareil Pleuropulmonaire : ${pulmoText}
-  -> Conclusion : Appareil pleuropulmonaire libre et sain.
-- Appareil Abdominal : ${abdoText}
-  -> Conclusion : Examen abdominal normal, souple et indolore.
-- Examen Neurologique : ${neuroText}
-  -> Conclusion : Examen neurologique strictly normal, pas de déficit focal.
-- Aires Ganglionnaires : ${gangText}
-  -> Conclusion : Aires ganglionnaires libres.
-
-7. EXAMEN PSYCHIATRIQUE INITIAL (OM)
-- Présentation / Contact : ${presText}
-- Conduites instinctuelles : ${instText}
-- Fonctions supérieures & Pensée : ${pensText}
-- Affects & Humeur : ${affText}
-
-8. TRAITEMENT PRESCRIT
-${traitement}`;
-      
+    function generateObservationText() {
+      const data = collectFormDataForSkeleton();
+      const draft = buildStrictObservationDraft(data);
       document.getElementById('field-obs-medicale').value = draft;
-      showToast("Observation médicale locale générée !");
+      showToast("Observation médicale locale générée selon le squelette !");
     }
 
     // ==========================================
@@ -1040,57 +1586,11 @@ ${traitement}`;
 
       showToast(`Génération avec ${model} (${provider})...`);
 
-      const getCheckedValues = (selector) => Array.from(document.querySelectorAll(selector + ':checked')).map(el => el.value);
+      const formData = collectFormDataForSkeleton();
+      const filledSkeleton = buildStrictObservationDraft(formData);
 
-      const formData = {
-        nom: document.getElementById('field-nom').value,
-        prenom: document.getElementById('field-prenom').value,
-        age: document.getElementById('field-age').value,
-        sexe: document.getElementById('field-sexe').value,
-        etatcivil: document.getElementById('field-etatcivil').value,
-        profession: document.getElementById('field-profession').value,
-        motif: document.getElementById('field-motif').value,
-        biographie: document.getElementById('field-biographie').value,
-        hdmBrut: document.getElementById('field-hdm').value,
-        atcdPsy: [...getCheckedValues('.atcd-psy-chip'), document.getElementById('atcd-psy-free').value].filter(Boolean).join(', '),
-        atcdTox: [...getCheckedValues('.atcd-tox-chip'), document.getElementById('atcd-tox-free').value].filter(Boolean).join(', '),
-        atcdMed: [...getCheckedValues('.atcd-med-chip'), document.getElementById('atcd-med-free').value].filter(Boolean).join(', '),
-        constantes: document.getElementById('om-constantes').value,
-        examenPhy: [
-          ...getCheckedValues('.om-gen-chip'), document.getElementById('om-gen-free').value,
-          ...getCheckedValues('.om-cardio-chip'), document.getElementById('om-cardio-free').value,
-          ...getCheckedValues('.om-pulmo-chip'), document.getElementById('om-pulmo-free').value,
-          ...getCheckedValues('.om-abdo-chip'), document.getElementById('om-abdo-free').value,
-          ...getCheckedValues('.om-neuro-chip'), document.getElementById('om-neuro-free').value,
-          ...getCheckedValues('.om-gang-chip'), document.getElementById('om-gang-free').value
-        ].filter(Boolean).join(' '),
-        examenPsy: [
-          ...getCheckedValues('.om-pres-chip'), document.getElementById('om-pres-free').value,
-          ...getCheckedValues('.om-inst-chip'), document.getElementById('om-inst-free').value,
-          ...getCheckedValues('.om-pens-chip'), document.getElementById('om-pens-free').value,
-          ...getCheckedValues('.om-aff-chip'), document.getElementById('om-aff-free').value
-        ].filter(Boolean).join(', '),
-        traitement: document.getElementById('field-traitement').value
-      };
-
-      const promptSystem = `Tu es un assistant clinicien senior expert en psychiatrie et neurologie. 
-Rédige une observation médicale hospitalière formelle, académique et parfaitement structurée.
-Consignes strictes :
-- Ne mets AUCUNE introduction ou formule de politesse (ex: "Voici l'observation...").
-- Ne mets AUCUNE balise de code Markdown au début ou à la fin (pas de \`\`\`markdown).
-- Suis rigoureusement le plan en 8 sections (1. Identité, 2. Motif, 3. ATCD, 4. Biographie, 5. Histoire de la maladie (ordre rétrograde), 6. Examen physique par appareil avec conclusions, 7. Examen psychiatrique OM, 8. Traitement).`;
-
-      const promptUser = `Données brutes du patient à traiter :
-- Nom/Prénom/Âge/Sexe : ${formData.nom} ${formData.prenom}, ${formData.age}, ${formData.sexe}
-- État civil / Profession : ${formData.etatcivil} / ${formData.profession}
-- Motif : ${formData.motif}
-- Biographie : ${formData.biographie}
-- Notes HdM : ${formData.hdmBrut}
-- ATCD : Psy(${formData.atcdPsy}), Tox(${formData.atcdTox}), Médical(${formData.atcdMed})
-- Constantes : ${formData.constantes}
-- Examen physique relevé : ${formData.examenPhy}
-- Examen psychiatrique relevé : ${formData.examenPsy}
-- Traitement : ${formData.traitement}`;
+      const promptSystem = AI_PROMPTS_CONFIG.observation.system;
+      const promptUser = AI_PROMPTS_CONFIG.observation.buildUserPrompt(formData, filledSkeleton);
 
       try {
         const aiText = await callSelectedAIProvider(promptSystem, promptUser);
@@ -1102,8 +1602,33 @@ Consignes strictes :
       }
     }
 
+    async function generateEvolutionWithAI() {
+      const jour = document.getElementById('evo-jour-tag').value.trim();
+      const resume = document.getElementById('evo-resume-text').value.trim();
+      const cat = document.getElementById('evo-cat-text').value.trim();
+      const currentPres = document.getElementById('evo-presentation-text').value.trim();
+      const rawNotes = [jour, resume, currentPres, cat].filter(Boolean).join(" | ");
+      if (!rawNotes) {
+        alert("Saisissez au moins quelques mots-clés d'évolution avant de lancer l'IA.");
+        return;
+      }
+      showToast("Rédaction de l'évolution par l'IA...");
+      try {
+        const aiEvo = await callSelectedAIProvider(
+          "Tu es un assistant clinicien senior en psychiatrie et neurologie. Rédige une évolution journalière hospitalière concise, claire et structurée en français à partir des notes fournies.",
+          `Jour : ${jour || "Non précisé"}\nRésumé : ${resume || "Non précisé"}\nNotes : ${currentPres || resume}\nCAT : ${cat || "À préciser"}`
+        );
+        document.getElementById('evo-presentation-text').value = aiEvo;
+        showToast("Évolution rédigée par l'IA !");
+      } catch (err) {
+        alert("Erreur IA Évolution : " + err.message);
+      }
+    }
+
     async function exportToWordDocx() {
-      generateObservationText();
+      if (!document.getElementById('field-obs-medicale').value.trim()) {
+        generateObservationText();
+      }
       const nom = document.getElementById('field-nom').value || 'Patient';
       const prenom = document.getElementById('field-prenom').value || '';
       const obsContent = document.getElementById('field-obs-medicale').value;
@@ -1164,8 +1689,10 @@ Consignes strictes :
     function toggleAutoPhyEvo(cb) { document.querySelectorAll('.evo-phy-chip').forEach(c => c.checked = cb.checked); }
 
     function switchView(viewName) {
+      document.getElementById('view-rooms').classList.toggle('hidden', viewName !== 'rooms');
       document.getElementById('view-list').classList.toggle('hidden', viewName !== 'list');
       document.getElementById('view-form').classList.toggle('hidden', viewName !== 'form');
+      if (viewName === 'rooms') renderRoomsView();
     }
 
     function switchFormTab(tab) {
@@ -1187,6 +1714,7 @@ Consignes strictes :
       });
       document.getElementById('field-sexe').value = 'M';
       document.getElementById('field-nationalite').value = 'Malagasy';
+      if (document.getElementById('field-shared-group')) document.getElementById('field-shared-group').value = '';
       updateFormHeader("Nouveau Patient", "Observation Clinique & Sémiologique");
       renderEvolutionsList([]);
       switchView('form');
@@ -1200,17 +1728,42 @@ Consignes strictes :
       const pId = window.currentPatientId || ('patient_' + Date.now());
       window.currentPatientId = pId;
       const existingPatient = window.patients.find(p => p.id === pId);
+      const currentUser = (auth && auth.currentUser) ? auth.currentUser : null;
+      const ownerId = existingPatient?.ownerId || (currentUser ? currentUser.uid : 'local_user');
+      const selectedGroupId = document.getElementById('field-shared-group')?.value || '';
+      const grp = window.groups.find(g => g.id === selectedGroupId);
+      const sharedGroupIds = selectedGroupId
+        ? Array.from(new Set([...(existingPatient?.sharedGroupIds || []), selectedGroupId]))
+        : (existingPatient?.sharedGroupIds || []);
+      const memberIds = Array.from(new Set([
+        ownerId,
+        ...(existingPatient?.memberIds || []),
+        ...(grp?.members || [])
+      ]));
 
-      generateObservationText();
+      if (!document.getElementById('field-obs-medicale').value.trim()) {
+        generateObservationText();
+      }
 
       const patientData = {
         id: pId,
+        ownerId: ownerId,
+        sharedGroupIds: sharedGroupIds,
+        memberIds: memberIds,
+        salle: document.getElementById('field-salle')?.value.trim() || existingPatient?.salle || '',
+        lit: document.getElementById('field-lit')?.value.trim() || existingPatient?.lit || '',
         nom: nom,
         prenom: prenom,
         age: document.getElementById('field-age').value,
         sexe: document.getElementById('field-sexe').value,
         etatcivil: document.getElementById('field-etatcivil').value,
         profession: document.getElementById('field-profession').value,
+        nse: document.getElementById('field-nse').value,
+        scolarite: document.getElementById('field-scolarite').value,
+        religion: document.getElementById('field-religion').value,
+        fratrie: document.getElementById('field-fratrie').value,
+        origine: document.getElementById('field-origine').value,
+        nationalite: document.getElementById('field-nationalite').value,
         motif: motif,
         biographie: document.getElementById('field-biographie').value,
         hdm: document.getElementById('field-hdm').value,
@@ -1227,12 +1780,13 @@ Consignes strictes :
       localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
       updatePatientCount();
       renderPatientsList();
+      renderRoomsView();
       showToast("Dossier enregistré !");
       switchView('list');
 
       if (db && window.colRef) {
         try {
-          await setDoc(doc(doc(db, "patients_medobs"), pId), patientData, { merge: true });
+          await setDoc(doc(db, "patients_medobs", pId), patientData, { merge: true });
         } catch (e) {
           console.warn("Écriture Cloud échouée :", e);
         }
@@ -1250,6 +1804,17 @@ Consignes strictes :
       document.getElementById('field-sexe').value = p.sexe || 'M';
       document.getElementById('field-etatcivil').value = p.etatcivil || '';
       document.getElementById('field-profession').value = p.profession || '';
+      document.getElementById('field-nse').value = p.nse || '';
+      document.getElementById('field-scolarite').value = p.scolarite || '';
+      document.getElementById('field-religion').value = p.religion || '';
+      document.getElementById('field-fratrie').value = p.fratrie || '';
+      document.getElementById('field-origine').value = p.origine || '';
+      document.getElementById('field-nationalite').value = p.nationalite || 'Malagasy';
+      if (document.getElementById('field-salle')) document.getElementById('field-salle').value = p.salle || '';
+      if (document.getElementById('field-lit')) document.getElementById('field-lit').value = p.lit || '';
+      if (document.getElementById('field-shared-group')) {
+        document.getElementById('field-shared-group').value = (p.sharedGroupIds && p.sharedGroupIds[0]) || '';
+      }
       document.getElementById('field-motif').value = p.motif || '';
       document.getElementById('field-biographie').value = p.biographie || '';
       document.getElementById('field-hdm').value = p.hdm || '';
@@ -1272,6 +1837,7 @@ Consignes strictes :
         localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
         updatePatientCount();
         renderPatientsList();
+        renderRoomsView();
         showToast("Dossier supprimé");
       }
     }
@@ -1301,7 +1867,7 @@ Consignes strictes :
       container.innerHTML = filtered.map(p => `
         <div onclick="loadPatientIntoForm('${p.id}')" class="bg-white p-3.5 rounded-2xl border shadow-sm hover:border-sky-400 transition cursor-pointer flex items-center justify-between touch-btn">
           <div>
-            <h4 class="font-bold text-slate-800 text-sm">${p.nom || 'Patient'} ${p.prenom || ''} (${p.age || '?'} ans)</h4>
+            <h4 class="font-bold text-slate-800 text-sm">${p.nom || 'Patient'} ${p.prenom || ''} (${p.age || '?'} ans)${p.salle || p.lit ? ` — <span class="text-medical-700">${p.salle || ''} ${p.lit || ''}</span>` : ''}</h4>
             <p class="text-xs text-slate-600 line-clamp-1">${p.motif || 'Sans motif'}</p>
           </div>
           <button onclick="deletePatient('${p.id}', event)" class="p-2 text-slate-300 hover:text-rose-500"><i class="fa-solid fa-trash-can text-sm"></i></button>
@@ -1309,17 +1875,612 @@ Consignes strictes :
       `).join('');
     }
 
+    // =========================================================================
+    // VUE SALLES & LITS, STATUT DU JOUR, ÉVOLUTIONS RÉTROGRADES & OBSERVATION A->Z
+    // =========================================================================
+    function todayDateKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function isEvolutionValidatedToday(patient) {
+      const evos = patient.evolutions || [];
+      const tKey = todayDateKey();
+      const todayFr = new Date().toLocaleDateString('fr-FR');
+      return evos.some(e => {
+        if (e.validee === false) return false;
+        if (e.dateISO && String(e.dateISO).startsWith(tKey)) return true;
+        if (e.date && String(e.date).startsWith(todayFr)) return true;
+        return false;
+      });
+    }
+
+    function setRoomFilter(flt) {
+      window.roomFilter = flt;
+      ['all', 'pending', 'done'].forEach(k => {
+        const el = document.getElementById('rflt-' + k);
+        if (!el) return;
+        el.classList.toggle('ring-2', k === flt);
+        el.classList.toggle('ring-medical-600', k === flt);
+      });
+      renderRoomsView();
+    }
+
+    function selectRoomPatient(patientId) {
+      const p = window.patients.find(x => x.id === patientId);
+      if (!p) return;
+      window.selectedRoomPatientId = p.id;
+      renderRoomsView();
+
+      document.getElementById('room-empty-state').classList.add('hidden');
+      document.getElementById('room-detail-panel').classList.remove('hidden');
+
+      const done = isEvolutionValidatedToday(p);
+      document.getElementById('room-ws-title').innerText = `${p.nom || 'Patient'} ${p.prenom || ''} ${p.age ? '(' + p.age + ')' : ''}`.trim();
+      document.getElementById('room-ws-motif').innerText = p.motif || 'Observation médicale';
+      document.getElementById('room-ws-salle').value = p.salle || '';
+      document.getElementById('room-ws-lit').value = p.lit || '';
+
+      const statusBadge = document.getElementById('room-ws-status');
+      statusBadge.className = `text-[11px] font-bold px-2.5 py-0.5 rounded-full ${done ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`;
+      statusBadge.innerText = done ? 'Évolution du jour validée' : 'Évolution du jour à faire';
+
+      // Tri rétrograde (du plus récent au plus ancien)
+      const sortedEvos = [...(p.evolutions || [])].sort((a, b) =>
+        String(b.dateISO || b.date || '').localeCompare(String(a.dateISO || a.date || ''))
+      );
+
+      document.getElementById('room-retrograde-evos').innerHTML = sortedEvos.length === 0
+        ? `<div class="text-xs text-slate-400 italic p-3 bg-slate-50 rounded-xl border">Aucune évolution enregistrée.</div>`
+        : sortedEvos.map(e => `
+          <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs space-y-1">
+            <div class="flex items-center justify-between font-bold">
+              <span class="text-medical-700">${e.jour || 'Évolution'}</span>
+              <span class="text-[10px] text-slate-500">${e.date || ''}</span>
+            </div>
+            ${e.resume ? `<div><strong>Résumé :</strong> ${e.resume}</div>` : ''}
+            ${e.presentation ? `<div class="bg-white p-2 rounded-lg border text-slate-700 whitespace-pre-line font-mono text-[11px]">${e.presentation}</div>` : ''}
+            ${e.cat ? `<div class="text-slate-600"><strong>CAT :</strong> ${e.cat}</div>` : ''}
+          </div>
+        `).join('');
+
+      const obsFull = (p.obs_medicale && p.obs_medicale.trim())
+        ? p.obs_medicale
+        : buildStrictObservationDraft(p);
+      document.getElementById('room-full-obs-text').innerText = obsFull;
+    }
+
+    async function saveRoomBedFromPanel() {
+      if (!window.selectedRoomPatientId) return;
+      const p = window.patients.find(x => x.id === window.selectedRoomPatientId);
+      if (!p) return;
+      p.salle = document.getElementById('room-ws-salle').value.trim();
+      p.lit = document.getElementById('room-ws-lit').value.trim();
+      p.updatedAt = new Date().toISOString();
+      localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
+      if (db && window.colRef) {
+        try { await setDoc(doc(db, "patients_medobs", p.id), p, { merge: true }); } catch (_) {}
+      }
+      showToast("Salle / Lit mis à jour");
+      renderRoomsView();
+      selectRoomPatient(p.id);
+    }
+
+    async function validateRoomEvolutionToday() {
+      if (!window.selectedRoomPatientId) return;
+      const p = window.patients.find(x => x.id === window.selectedRoomPatientId);
+      if (!p) return;
+
+      const jour = document.getElementById('room-evo-jour').value.trim() || "Évolution du jour";
+      const resume = document.getElementById('room-evo-resume').value.trim();
+      const presentation = document.getElementById('room-evo-presentation').value.trim();
+      const cat = document.getElementById('room-evo-cat').value.trim();
+
+      if (!resume && !presentation && !cat) {
+        alert("Renseignez au moins le résumé, la présentation ou la CAT avant de valider.");
+        return;
+      }
+
+      const now = new Date();
+      const entry = {
+        dateISO: now.toISOString(),
+        date: now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        jour,
+        resume,
+        presentation,
+        cat,
+        validee: true
+      };
+
+      const updatedEvolutions = [entry, ...(p.evolutions || [])];
+      p.evolutions = updatedEvolutions;
+      p.updatedAt = now.toISOString();
+      localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
+
+      if (db && window.colRef) {
+        try {
+          await setDoc(doc(db, "patients_medobs", p.id), { evolutions: updatedEvolutions, updatedAt: p.updatedAt }, { merge: true });
+        } catch (_) {}
+      }
+
+      document.getElementById('room-evo-jour').value = '';
+      document.getElementById('room-evo-resume').value = '';
+      document.getElementById('room-evo-presentation').value = '';
+      document.getElementById('room-evo-cat').value = '';
+
+      showToast("Évolution du jour validée !");
+      renderRoomsView();
+      selectRoomPatient(p.id);
+    }
+
+    function jumpToEditorTemplate(tab, runAI) {
+      if (!window.selectedRoomPatientId) return;
+      loadPatientIntoForm(window.selectedRoomPatientId);
+      switchFormTab(tab);
+      if (runAI && tab === 'obs' && document.getElementById('openrouter-api-key')?.value.trim()) {
+        generateObservationWithAI();
+      } else if (runAI && tab === 'evo' && document.getElementById('openrouter-api-key')?.value.trim()) {
+        generateEvolutionWithAI();
+      }
+    }
+
+    function copyRoomObservationAtoZ() {
+      const txt = document.getElementById('room-full-obs-text')?.innerText || '';
+      navigator.clipboard.writeText(txt).then(() => showToast("Observation A → Z copiée !"));
+    }
+
+    // =========================================================================
+    // GESTION DYNAMIQUE DES SALLES, DES LITS & FICHE DE RÉDACTION AU CLIC
+    // =========================================================================
+    function saveRoomsCatalogLocal() {
+      localStorage.setItem('medobs_rooms_catalog', JSON.stringify(window.roomsCatalog || []));
+    }
+
+    function syncRoomsCatalogWithPatients() {
+      if (!Array.isArray(window.roomsCatalog)) window.roomsCatalog = [];
+      (window.patients || []).forEach(p => {
+        const sName = (p.salle || '').trim();
+        const bName = (p.lit || '').trim();
+        if (!sName) return;
+        let room = window.roomsCatalog.find(r => r.name.toLowerCase() === sName.toLowerCase());
+        if (!room) {
+          room = { id: 'room_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), name: sName, beds: [] };
+          window.roomsCatalog.push(room);
+        }
+        if (bName && !room.beds.some(b => b.toLowerCase() === bName.toLowerCase())) {
+          room.beds.push(bName);
+        }
+      });
+      saveRoomsCatalogLocal();
+      refreshBedRoomSelect();
+    }
+
+    function refreshBedRoomSelect(preferredRoomName = '') {
+      const sel = document.getElementById('bed-target-room-select');
+      if (!sel) return;
+      const rooms = window.roomsCatalog || [];
+      if (rooms.length === 0) {
+        sel.innerHTML = `<option value="">Aucune salle</option>`;
+        return;
+      }
+      const prev = preferredRoomName || sel.value;
+      sel.innerHTML = rooms.map(r => `<option value="${r.name}">${r.name}</option>`).join('');
+      if (prev && rooms.some(r => r.name === prev)) {
+        sel.value = prev;
+      }
+    }
+
+    function createRoomFromUI() {
+      const input = document.getElementById('new-room-name-input');
+      const name = (input?.value || '').trim();
+      if (!name) {
+        alert("Entrez un nom de salle (ex: Salle A).");
+        return;
+      }
+      const exists = (window.roomsCatalog || []).some(r => r.name.toLowerCase() === name.toLowerCase());
+      if (exists) {
+        refreshBedRoomSelect(name);
+        input.value = '';
+        showToast("Cette salle existe déjà");
+        return;
+      }
+      window.roomsCatalog.push({
+        id: 'room_' + Date.now(),
+        name,
+        beds: ['Lit 1', 'Lit 2']
+      });
+      saveRoomsCatalogLocal();
+      refreshBedRoomSelect(name);
+      input.value = '';
+      renderRoomsView();
+      showToast(`Salle "${name}" créée avec Lit 1 et Lit 2`);
+    }
+
+    function addBedToRoomFromUI() {
+      const sel = document.getElementById('bed-target-room-select');
+      const bedInput = document.getElementById('new-bed-name-input');
+      const roomName = (sel?.value || '').trim();
+      const bedName = (bedInput?.value || '').trim();
+      if (!roomName) {
+        alert("Créez ou sélectionnez d'abord une salle.");
+        return;
+      }
+      if (!bedName) {
+        alert("Entrez un nom de lit (ex: Lit 2).");
+        return;
+      }
+      const room = window.roomsCatalog.find(r => r.name === roomName);
+      if (!room) return;
+      if (!room.beds.some(b => b.toLowerCase() === bedName.toLowerCase())) {
+        room.beds.push(bedName);
+        saveRoomsCatalogLocal();
+      }
+      bedInput.value = '';
+      renderRoomsView();
+      selectBedSlot(roomName, bedName);
+      showToast(`${bedName} ajouté dans ${roomName}`);
+    }
+
+    function addQuickNumberedBeds() {
+      const sel = document.getElementById('bed-target-room-select');
+      const roomName = (sel?.value || '').trim();
+      if (!roomName) {
+        alert("Sélectionnez d'abord une salle.");
+        return;
+      }
+      const room = window.roomsCatalog.find(r => r.name === roomName);
+      if (!room) return;
+      for (let i = 1; i <= 5; i++) {
+        const label = `Lit ${i}`;
+        if (!room.beds.some(b => b.toLowerCase() === label.toLowerCase())) {
+          room.beds.push(label);
+        }
+      }
+      saveRoomsCatalogLocal();
+      renderRoomsView();
+      showToast(`Lits 1 à 5 disponibles dans ${roomName}`);
+    }
+
+    function deleteRoomFromUI(roomName, ev) {
+      if (ev) ev.stopPropagation();
+      if (!confirm(`Supprimer la salle "${roomName}" de la liste ?`)) return;
+      window.roomsCatalog = (window.roomsCatalog || []).filter(r => r.name !== roomName);
+      saveRoomsCatalogLocal();
+      refreshBedRoomSelect();
+      renderRoomsView();
+      showToast(`Salle "${roomName}" retirée`);
+    }
+
+    function deleteBedFromRoom(roomName, bedName, ev) {
+      if (ev) ev.stopPropagation();
+      const room = (window.roomsCatalog || []).find(r => r.name === roomName);
+      if (!room) return;
+      room.beds = room.beds.filter(b => b !== bedName);
+      saveRoomsCatalogLocal();
+      renderRoomsView();
+      showToast(`${bedName} retiré de ${roomName}`);
+    }
+
+    function renderRoomsView() {
+      const container = document.getElementById('rooms-list-container');
+      const statsEl = document.getElementById('rooms-stats-badge');
+      if (!container) return;
+
+      syncRoomsCatalogWithPatients();
+
+      const q = (document.getElementById('room-search-input')?.value || '').toLowerCase().trim();
+      const doneCount = window.patients.filter(isEvolutionValidatedToday).length;
+      if (statsEl) statsEl.innerText = `${doneCount} / ${window.patients.length} validés`;
+
+      const roomMap = new Map();
+      (window.roomsCatalog || []).forEach(r => {
+        roomMap.set(r.name, [...(r.beds || [])]);
+      });
+      (window.patients || []).forEach(p => {
+        const sName = (p.salle || 'Salle non assignée').trim();
+        if (!roomMap.has(sName)) roomMap.set(sName, []);
+        const bName = (p.lit || '').trim();
+        if (bName && !roomMap.get(sName).includes(bName)) {
+          roomMap.get(sName).push(bName);
+        }
+      });
+
+      let html = '';
+      roomMap.forEach((bedsList, roomName) => {
+        const roomPatients = (window.patients || []).filter(p => (p.salle || 'Salle non assignée').trim() === roomName);
+        const sortedBeds = [...bedsList].sort((a, b) => String(a).localeCompare(String(b), 'fr', { numeric: true }));
+
+        const bedItemsHtml = sortedBeds.map(bedName => {
+          const occupant = roomPatients.find(p => String(p.lit || '').trim().toLowerCase() === String(bedName).trim().toLowerCase());
+          const done = occupant ? isEvolutionValidatedToday(occupant) : false;
+
+          if (window.roomFilter === 'pending' && (!occupant || done)) return '';
+          if (window.roomFilter === 'done' && (!occupant || !done)) return '';
+
+          if (q) {
+            const hay = `${roomName} ${bedName} ${occupant?.nom || ''} ${occupant?.prenom || ''} ${occupant?.motif || ''}`.toLowerCase();
+            if (!hay.includes(q)) return '';
+          }
+
+          const isSelected = window.selectedBedSlot &&
+            window.selectedBedSlot.roomName === roomName &&
+            window.selectedBedSlot.bedName === bedName;
+
+          if (occupant) {
+            return `
+              <div onclick="selectBedSlot('${roomName.replace(/'/g, "\\'")}', '${bedName.replace(/'/g, "\\'")}')" class="w-full text-left p-2.5 rounded-xl border transition cursor-pointer touch-btn ${isSelected ? 'border-medical-600 bg-sky-50' : 'border-slate-200 bg-slate-50/70 hover:border-sky-300'}">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-xs font-extrabold text-slate-800"><i class="fa-solid fa-bed text-medical-600 mr-1"></i>${bedName}</span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${done ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                    ${done ? '✓ Validée' : '• À faire'}
+                  </span>
+                </div>
+                <div class="text-xs font-semibold text-slate-900 mt-1">${occupant.nom || 'Patient'} ${occupant.prenom || ''}</div>
+                <div class="text-[11px] text-slate-500 truncate">${occupant.motif || 'Sans motif'}</div>
+              </div>
+            `;
+          }
+
+          return `
+            <div onclick="selectBedSlot('${roomName.replace(/'/g, "\\'")}', '${bedName.replace(/'/g, "\\'")}')" class="w-full text-left p-2.5 rounded-xl border border-dashed transition cursor-pointer touch-btn flex items-center justify-between gap-2 ${isSelected ? 'border-indigo-600 bg-indigo-50/70' : 'border-slate-300 bg-white hover:border-indigo-400'}">
+              <div>
+                <div class="text-xs font-bold text-slate-700"><i class="fa-solid fa-bed text-slate-400 mr-1"></i>${bedName}</div>
+                <div class="text-[11px] text-indigo-600 font-medium mt-0.5">+ Lit libre — Cliquer pour rédiger</div>
+              </div>
+              <button type="button" onclick="deleteBedFromRoom('${roomName.replace(/'/g, "\\'")}', '${bedName.replace(/'/g, "\\'")}', event)" class="p-1 text-slate-300 hover:text-rose-500" title="Retirer ce lit">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            </div>
+          `;
+        }).filter(Boolean).join('');
+
+        if (!bedItemsHtml) return;
+
+        html += `
+          <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-700 border-b pb-1.5">
+              <span><i class="fa-solid fa-door-open text-medical-600 mr-1"></i>${roomName}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-slate-400">${sortedBeds.length} lit(s)</span>
+                ${roomName !== 'Salle non assignée' ? `<button type="button" onclick="deleteRoomFromUI('${roomName.replace(/'/g, "\\'")}', event)" class="text-slate-300 hover:text-rose-600" title="Supprimer la salle"><i class="fa-solid fa-trash text-[11px]"></i></button>` : ''}
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              ${bedItemsHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      if (!html) {
+        container.innerHTML = `<div class="bg-white p-6 rounded-2xl border text-center text-xs text-slate-400">Aucun lit / patient dans ce filtre.</div>`;
+        return;
+      }
+      container.innerHTML = html;
+    }
+
+    function selectBedSlot(roomName, bedName) {
+      window.selectedBedSlot = { roomName, bedName };
+      renderRoomsView();
+
+      const occupant = (window.patients || []).find(p =>
+        (p.salle || '').trim().toLowerCase() === String(roomName).trim().toLowerCase() &&
+        (p.lit || '').trim().toLowerCase() === String(bedName).trim().toLowerCase()
+      );
+
+      if (occupant) {
+        document.getElementById('room-free-bed-panel').classList.add('hidden');
+        selectRoomPatient(occupant.id);
+        return;
+      }
+
+      window.selectedRoomPatientId = null;
+      document.getElementById('room-empty-state').classList.add('hidden');
+      document.getElementById('room-detail-panel').classList.add('hidden');
+      const freePanel = document.getElementById('room-free-bed-panel');
+      freePanel.classList.remove('hidden');
+
+      document.getElementById('free-bed-title').innerText = `${roomName} — ${bedName}`;
+
+      const existingSel = document.getElementById('free-bed-existing-patient');
+      existingSel.innerHTML = `<option value="">-- Nouveau dossier patient sur ce lit (${bedName}) --</option>` +
+        (window.patients || []).map(p => `<option value="${p.id}">${p.nom || 'Patient'} ${p.prenom || ''} (${p.salle ? p.salle + ' ' : ''}${p.lit || 'sans lit'})</option>`).join('');
+
+      document.getElementById('free-bed-nom').value = '';
+      document.getElementById('free-bed-prenom').value = '';
+      document.getElementById('free-bed-age').value = '';
+      document.getElementById('free-bed-sexe').value = 'M';
+      document.getElementById('free-bed-motif').value = '';
+      document.getElementById('free-bed-notes').value = '';
+      document.getElementById('free-bed-cat').value = '';
+    }
+
+    function prefillExistingPatientForBed() {
+      const pid = document.getElementById('free-bed-existing-patient')?.value || '';
+      if (!pid) return;
+      const p = (window.patients || []).find(x => x.id === pid);
+      if (!p) return;
+      document.getElementById('free-bed-nom').value = p.nom || '';
+      document.getElementById('free-bed-prenom').value = p.prenom || '';
+      document.getElementById('free-bed-age').value = p.age || '';
+      document.getElementById('free-bed-sexe').value = p.sexe || 'M';
+      document.getElementById('free-bed-motif').value = p.motif || '';
+      document.getElementById('free-bed-notes').value = p.hdm || p.obs_medicale || '';
+      document.getElementById('free-bed-cat').value = p.traitement || '';
+    }
+
+    async function saveBedDraftPatient(goToFullForm = false) {
+      if (!window.selectedBedSlot) return;
+      const { roomName, bedName } = window.selectedBedSlot;
+      const existingId = document.getElementById('free-bed-existing-patient')?.value || '';
+      const nom = (document.getElementById('free-bed-nom')?.value || '').trim() || `Patient ${bedName}`;
+      const prenom = (document.getElementById('free-bed-prenom')?.value || '').trim();
+      const age = (document.getElementById('free-bed-age')?.value || '').trim();
+      const sexe = document.getElementById('free-bed-sexe')?.value || 'M';
+      const motif = (document.getElementById('free-bed-motif')?.value || '').trim() || `Admission ${bedName} (${roomName})`;
+      const notes = (document.getElementById('free-bed-notes')?.value || '').trim();
+      const cat = (document.getElementById('free-bed-cat')?.value || '').trim();
+
+      const basePatient = existingId ? window.patients.find(x => x.id === existingId) : null;
+      const pId = basePatient ? basePatient.id : ('patient_' + Date.now());
+      const currentUser = (auth && auth.currentUser) ? auth.currentUser : null;
+
+      const patientObj = {
+        ...(basePatient || {}),
+        id: pId,
+        ownerId: basePatient?.ownerId || (currentUser ? currentUser.uid : 'local_user'),
+        memberIds: basePatient?.memberIds || [(currentUser ? currentUser.uid : 'local_user')],
+        salle: roomName === 'Salle non assignée' ? '' : roomName,
+        lit: bedName,
+        nom,
+        prenom,
+        age,
+        sexe,
+        motif,
+        hdm: notes || (basePatient?.hdm || ''),
+        traitement: cat || (basePatient?.traitement || ''),
+        updatedAt: new Date().toISOString(),
+        evolutions: basePatient?.evolutions || []
+      };
+
+      if (!patientObj.obs_medicale) {
+        patientObj.obs_medicale = buildStrictObservationDraft(patientObj);
+      }
+
+      const idx = window.patients.findIndex(x => x.id === pId);
+      if (idx >= 0) window.patients[idx] = patientObj;
+      else window.patients.push(patientObj);
+
+      localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
+      if (db && window.colRef) {
+        try { await setDoc(doc(db, "patients_medobs", pId), patientObj, { merge: true }); } catch (_) {}
+      }
+
+      updatePatientCount();
+      renderPatientsList();
+      renderRoomsView();
+      showToast(`Rédaction enregistrée sur ${roomName} — ${bedName}`);
+
+      if (goToFullForm) {
+        loadPatientIntoForm(pId);
+      } else {
+        selectBedSlot(roomName, bedName);
+      }
+    }
+
+    function openFullFormForSelectedBed() {
+      if (!window.selectedBedSlot) {
+        startNewPatient();
+        return;
+      }
+      const { roomName, bedName } = window.selectedBedSlot;
+      startNewPatient();
+      if (document.getElementById('field-salle')) {
+        document.getElementById('field-salle').value = roomName === 'Salle non assignée' ? '' : roomName;
+      }
+      if (document.getElementById('field-lit')) {
+        document.getElementById('field-lit').value = bedName || '';
+      }
+      document.getElementById('field-nom').value = (document.getElementById('free-bed-nom')?.value || '').trim();
+      document.getElementById('field-prenom').value = (document.getElementById('free-bed-prenom')?.value || '').trim();
+      document.getElementById('field-age').value = (document.getElementById('free-bed-age')?.value || '').trim();
+      document.getElementById('field-sexe').value = document.getElementById('free-bed-sexe')?.value || 'M';
+      document.getElementById('field-motif').value = (document.getElementById('free-bed-motif')?.value || '').trim();
+      document.getElementById('field-hdm').value = (document.getElementById('free-bed-notes')?.value || '').trim();
+      document.getElementById('field-traitement').value = (document.getElementById('free-bed-cat')?.value || '').trim();
+    }
+
+    // =========================================================================
+    // GROUPES DE PARTAGE ENTRE COMPTES
+    // =========================================================================
+    function renderGroupOptions() {
+      const sel = document.getElementById('field-shared-group');
+      if (!sel) return;
+      const currentVal = sel.value;
+      sel.innerHTML = `<option value="">Privé (moi uniquement)</option>` +
+        (window.groups || []).map(g => `<option value="${g.id}">${g.name || g.id}</option>`).join('');
+      sel.value = currentVal;
+    }
+
+    function renderGroupsList() {
+      const box = document.getElementById('groups-list-box');
+      if (!box) return;
+      if (!window.groups || window.groups.length === 0) {
+        box.innerHTML = `<div class="text-slate-400 italic">Aucun groupe créé pour l'instant.</div>`;
+        return;
+      }
+      box.innerHTML = window.groups.map(g => `
+        <div class="p-2 rounded-lg border bg-slate-50 flex items-center justify-between">
+          <span class="font-bold text-slate-800">${g.name || g.id}</span>
+          <span class="text-[10px] text-slate-500">${(g.members || []).length} membre(s)</span>
+        </div>
+      `).join('');
+    }
+
+    function openGroupsModal() {
+      renderGroupsList();
+      document.getElementById('groups-modal').classList.remove('hidden');
+    }
+
+    function closeGroupsModal() {
+      document.getElementById('groups-modal').classList.add('hidden');
+    }
+
+    async function handleCreateGroup() {
+      const name = document.getElementById('new-group-name').value.trim();
+      const rawEmails = document.getElementById('new-group-emails').value.trim();
+      if (!name) {
+        alert("Donnez un nom au groupe.");
+        return;
+      }
+      const user = (auth && auth.currentUser) ? auth.currentUser : null;
+      const memberIds = new Set([user ? user.uid : 'local_user']);
+      const emails = rawEmails.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+      if (db && user) {
+        for (const email of emails) {
+          try {
+            const snap = await getDocs(query(collection(db, "users"), where("email", "==", email)));
+            snap.forEach(d => memberIds.add(d.id));
+          } catch (_) {}
+        }
+      }
+
+      const groupObj = {
+        id: 'group_' + Date.now(),
+        name,
+        createdBy: user ? user.uid : 'local_user',
+        members: Array.from(memberIds),
+        createdAt: new Date().toISOString()
+      };
+
+      window.groups = [...(window.groups || []), groupObj];
+      localStorage.setItem('medobs_groups_local', JSON.stringify(window.groups));
+      if (db && user) {
+        try { await setDoc(doc(db, "groups", groupObj.id), groupObj); } catch (_) {}
+      }
+
+      document.getElementById('new-group-name').value = '';
+      document.getElementById('new-group-emails').value = '';
+      renderGroupOptions();
+      renderGroupsList();
+      showToast("Groupe créé !");
+    }
+
     async function addEvolutionEntry() {
       if (!window.currentPatientId) return;
       const p = window.patients.find(p => p.id === window.currentPatientId);
       if (!p) return;
 
+      const now = new Date();
       const evoData = {
-        date: new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}),
+        dateISO: now.toISOString(),
+        date: now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}),
         jour: document.getElementById('evo-jour-tag').value.trim() || "J2 d'hospitalisation",
         resume: document.getElementById('evo-resume-text').value.trim(),
         presentation: document.getElementById('evo-presentation-text').value.trim(),
-        cat: document.getElementById('evo-cat-text').value.trim()
+        cat: document.getElementById('evo-cat-text').value.trim(),
+        validee: true
       };
 
       const updatedEvolutions = [evoData, ...(p.evolutions || [])];
@@ -1332,6 +2493,7 @@ Consignes strictes :
       localStorage.setItem('medobs_patients_local', JSON.stringify(window.patients));
       showToast("Évolution enregistrée !");
       renderEvolutionsList(updatedEvolutions);
+      renderRoomsView();
     }
 
     function renderEvolutionsList(evos) {
@@ -1341,7 +2503,8 @@ Consignes strictes :
         container.innerHTML = `<div class="text-center py-4 text-xs text-slate-400 bg-white rounded-xl border">Aucune évolution enregistrée</div>`;
         return;
       }
-      container.innerHTML = evos.map(e => `
+      const sorted = [...evos].sort((a, b) => String(b.dateISO || b.date || '').localeCompare(String(a.dateISO || a.date || '')));
+      container.innerHTML = sorted.map(e => `
         <div class="bg-white p-3 rounded-xl border space-y-1 text-xs">
           <div class="font-bold text-medical-700">${e.jour} - ${e.date}</div>
           ${e.presentation ? `<p class="bg-sky-50 p-2 rounded text-slate-800 font-mono"><strong>Présentation :</strong> ${e.presentation}</p>` : ''}
@@ -1352,7 +2515,9 @@ Consignes strictes :
     }
 
     function generateStaffReport() {
-      generateObservationText();
+      if (!document.getElementById('field-obs-medicale').value.trim()) {
+        generateObservationText();
+      }
       const nom = document.getElementById('field-nom').value || 'Patient';
       const obsMed = document.getElementById('field-obs-medicale').value || '';
       const traitement = document.getElementById('field-traitement').value || '';
@@ -1375,7 +2540,9 @@ Consignes strictes :
     }
 
     function copyObservationForAI() {
-      generateObservationText();
+      if (!document.getElementById('field-obs-medicale').value.trim()) {
+        generateObservationText();
+      }
       const obsVal = document.getElementById('field-obs-medicale').value;
       navigator.clipboard.writeText(obsVal).then(() => showToast("📋 Observation copiée !"));
     }
