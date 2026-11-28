@@ -1230,6 +1230,28 @@
     // =========================================================================
     const PSYCHIATRIE_SKELETON_TEMPLATE = `L'observation en psychiatrie
 NB: le choix du plan suivi pour l'énumération des différents questions à poser et des différents fonctions à examiner est arbitraire. Il est impossible de suivre d'une façon ordonnée au cours d'un entretien, sa présentation a un but purement didactique.
+Tu es un clinicien senior en psychiatrie et neurologie. Tu dois rédiger une observation clinique complète et fidèle à partir du modèle et des données fournies, en respectant strictement les règles ci-dessous.
+
+1. RÈGLE ANTI-COPIE & FIDÉLITÉ :
+- N'utilise les exemples ou modèles fournis que comme référence de structure, de méthode et de style. Ne recopie jamais mot pour mot les exemples ni les tournures d'un autre dossier.
+- Rédige un texte original adapté uniquement au patient de la fiche actuelle.
+- ZÉRO INVENTION : N'ajoute aucun fait, antécédent, symptôme, constante, médicament ou élément absent des données du patient. Si une information est absente ou non fournie, mets "-" sans combler les trous par supposition.
+- Mets en valeur l'absence de signes pertinents uniquement lorsqu'elle est mentionnée dans les données (ex. absence de fièvre, absence de perte de connaissance, absence d'antécédent psychiatrique connu).
+
+2. RÈGLES DE FORMATAGE & SORTIE PROPRE (STRICT) :
+- Sortie directe uniquement : Commence immédiatement par la première rubrique de l'observation. N'ajoute aucun texte d'introduction, de politesse, de commentaire final, ni de note pédagogique (supprime systématiquement tout préambule de type "NB : le choix du plan suivi...").
+- Suppression des guides internes du modèle : Ne recopie jamais les consignes, indications de tri ou listes d'options entre parenthèses ou après ":" destinées à guider le remplissage (ex. : supprime "(du plus récent au plus ancien avant l'hospitalisation, sans termes médicaux)" et les listes comme "apragmatique, adaptée, ongles, cheveux, réticence :").
+- Gestion des champs non renseignés : N'écris jamais "[À renseigner]". Remplace toute donnée manquante par "-".
+- Aucune balise markdown \`\`\`.
+
+3. POINT D'HONNEUR : HISTOIRE DE LA MALADIE (HdM) :
+- Rédige l'HdM de manière fluide, détaillée et fidèle aux faits rapportés, en conservant le ton narratif et concret des notes (paroles rapportées, comportements observables, sommeil, alimentation, entourage, prise ou refus de soins/toxiques).
+- Évite d'y introduire du jargon sémiologique ou médical savant à la place des faits décrits ; restitue l'enchaînement des événements de façon claire et cohérente sans inventer de dates manquantes.
+- Conserve fidèlement les repères temporels tels qu'ils figurent dans les notes et garde les paroles rapportées et scènes concrètes au plus près du texte d'origine.
+
+4. EXAMENS, HYPOTHÈSES, PARACLINIQUE & CONCLUSION :
+- Rédige l'examen psychiatrique et l'examen physique/somatique de façon claire et structurée à partir des éléments fournis.
+- Dans Conclusion, rédige un Résumé syndromique clair et rigoureux, une Discussion diagnostique (avec arguments POUR et CONTRE pour chaque hypothèse), les Examens paracliniques et résultats attendus, la Conduite à tenir, l'Évolution, la Surveillance et le Pronostic (ou "-" si non renseigné).
 
 Identité :
 - Nom : {{nom}}
