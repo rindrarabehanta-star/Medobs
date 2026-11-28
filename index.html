@@ -1386,7 +1386,7 @@ Conclusion :
 - Surveillance : [À renseigner]
 - pronostic : [À renseigner]`;
 
-    // =========================================================================
+// =========================================================================
     // EXEMPLES FEW-SHOT POUR L'IA (VOUS POUVEZ AJOUTER D'AUTRES EXEMPLES ICI)
     // =========================================================================
     const AI_FEW_SHOT_EXAMPLES = [
@@ -1414,14 +1414,13 @@ RÈGLES ABSOLUES À RESPECTER :
    - SIGNES NÉGATIFS : Intègre naturellement les signes négatifs infectieux et généraux (absence de fièvre, de frissons, de douleurs, maintien ou non de l'état général) en langage courant SANS JAMAIS employer de mot médical.
    - Inspire-toi fidèlement du style narratif des exemples fournis.
 3. RÉSUMÉ SYNDROMIQUE (dans Conclusion) :
-   - Contrairement à l'HDM, rédige un Résumé syndromique court, rigoureux et en langage sémiologique/médical précis regroupant les grands syndromes retrouvés et le terrain/contexte d'hospitalisation. modèle :Il s'agit d'un(e) homme/femme de __ ans entré(e) pour ... le ... Actuellement à J... d'hospitalisation, il/elle présente un [résumé syndromique] chez un(e) patient(e) ayant comme antécédents [antécédents dans l'ordre : médicaux, chirurgicaux, psychiatriques, toxiques, autres, familiaux], nous évoque les hypothèses diagnostiques suivantes :/
-4. CHAMPS MANQUANTS : Si une information du squelette n'est pas présente dans les données brutes, laisse "[À renseigner]" sans inventer de faits cliniques.
-5. SORTIE PROPRE : Aucune phrase d'introduction, aucun commentaire, aucune balise markdown .
-6.REDACTION DES EXAMEN PHYSIQUE : redige les examens physique appareil par pareil en metant des puces pour chaque informations et tout les signe negatif `
-
+   - Contrairement à l'HDM, rédige un Résumé syndromique court, rigoureux et en langage sémiologique/médical précis regroupant les grands syndromes retrouvés et le terrain/contexte d'hospitalisation. Modèle : Il s'agit d'un(e) homme/femme de __ ans entré(e) pour ... le ... Actuellement à J... d'hospitalisation, il/elle présente un [résumé syndromique] chez un(e) patient(e) ayant comme antécédents [antécédents dans l'ordre : médicaux, chirurgicaux, psychiatriques, toxiques, autres, familiaux], nous évoque les hypothèses diagnostiques suivantes :/
+4. CHAMPS MANQUANTS : Si une information du squelette n'est pas présente dans les données brutes, mets "-" sans inventer de faits cliniques.
+5. SORTIE PROPRE : Aucune phrase d'introduction, aucun commentaire, aucune balise markdown \`\`\`.
+6. RÉDACTION DES EXAMENS PHYSIQUES : Rédige les examens physiques appareil par appareil en mettant des puces pour chaque information et tous les signes négatifs.`,
 
         buildUserPrompt: (formData, filledSkeleton) => {
-          const formattedExamples = AI_FEW_SHOT_EXAMPLES.map((ex, idx) =>
+          const formattedExamples = AI_FEW_SHOT_EXAMPLES.map((ex) =>
             `--- ${ex.titre} ---\nNotes/Mots-clés : ${ex.entree_mots_cles}\nRédaction attendue :\n${ex.sortie_attendue}`
           ).join('\n\n');
 
