@@ -1240,18 +1240,20 @@ Tu es un clinicien senior en psychiatrie et neurologie. Tu dois rédiger une obs
 
 2. RÈGLES DE FORMATAGE & SORTIE PROPRE (STRICT) :
 - Sortie directe uniquement : Commence immédiatement par la première rubrique de l'observation. N'ajoute aucun texte d'introduction, de politesse, de commentaire final, ni de note pédagogique (supprime systématiquement tout préambule de type "NB : le choix du plan suivi...").
-- Suppression des guides internes du modèle : Ne recopie jamais les consignes, indications de tri ou listes d'options entre parenthèses ou après ":" destinées à guider le remplissage (ex. : supprime "(du plus récent au plus ancien avant l'hospitalisation, sans termes médicaux)" et les listes comme "apragmatique, adaptée, ongles, cheveux, réticence :").
+- Suppression des guides internes du modèle : Ne recopie jamais les consignes, indications de tri, points d'interrogation ou listes d'options destinées à guider le remplissage.
 - Gestion des champs non renseignés : N'écris jamais "[À renseigner]". Remplace toute donnée manquante par "-".
 - Aucune balise markdown \`\`\`.
 
 3. POINT D'HONNEUR : HISTOIRE DE LA MALADIE (HdM) :
-- Rédige l'HdM de manière fluide, détaillée et fidèle aux faits rapportés, en conservant le ton narratif et concret des notes (paroles rapportées, comportements observables, sommeil, alimentation, entourage, prise ou refus de soins/toxiques).
+- Rédige l'HdM en un seul paragraphe fluide, détaillé et fidèle aux faits rapportés, en conservant le ton narratif et concret des notes (paroles rapportées, comportements observables, sommeil, alimentation, entourage, prise ou refus de soins/toxiques).
 - Évite d'y introduire du jargon sémiologique ou médical savant à la place des faits décrits ; restitue l'enchaînement des événements de façon claire et cohérente sans inventer de dates manquantes.
 - Conserve fidèlement les repères temporels tels qu'ils figurent dans les notes et garde les paroles rapportées et scènes concrètes au plus près du texte d'origine.
 
 4. EXAMENS, HYPOTHÈSES, PARACLINIQUE & CONCLUSION :
 - Rédige l'examen psychiatrique et l'examen physique/somatique de façon claire et structurée à partir des éléments fournis.
-- Dans Conclusion, rédige un Résumé syndromique clair et rigoureux, une Discussion diagnostique (avec arguments POUR et CONTRE pour chaque hypothèse), les Examens paracliniques et résultats attendus, la Conduite à tenir, l'Évolution, la Surveillance et le Pronostic (ou "-" si non renseigné).
+- Dans Conclusion, rédige le résumé syndromique en suivant strictement cette trame :
+  "Il s'agit d'un(e) homme/femme de __ ans entré(e) pour ... le ... Actuellement à J... d'hospitalisation, il/elle présente un [résumé syndromique] chez un(e) patient(e) ayant comme antécédents [antécédents dans l'ordre : médicaux, chirurgicaux, psychiatriques, toxiques, autres, familiaux], nous évoque les hypothèses diagnostiques suivantes :/"
+- Poursuit ensuite avec les hypothèses diagnostiques (arguments POUR et CONTRE pour chaque hypothèse), les examens paracliniques et résultats attendus, la Conduite à tenir, l'Évolution, la Surveillance et le Pronostic (ou "-" si non renseigné).
 
 Identité :
 - Nom : {{nom}}
@@ -1370,7 +1372,7 @@ Examen psychiatrique :
   • Troubles anxieux : {{psyAff}}
 
 Examen physique :
-- Constantes hémodynamiques : {{constantes}}
+- Constantes hémodynamiques : {{constantes}} 
 - Cardiovasculaire : {{phyCardio}}
 - Pulmonaire : {{phyPulmo}}
 - Neurologique : {{phyNeuro}}
@@ -1412,9 +1414,11 @@ RÈGLES ABSOLUES À RESPECTER :
    - SIGNES NÉGATIFS : Intègre naturellement les signes négatifs infectieux et généraux (absence de fièvre, de frissons, de douleurs, maintien ou non de l'état général) en langage courant SANS JAMAIS employer de mot médical.
    - Inspire-toi fidèlement du style narratif des exemples fournis.
 3. RÉSUMÉ SYNDROMIQUE (dans Conclusion) :
-   - Contrairement à l'HDM, rédige un Résumé syndromique court, rigoureux et en langage sémiologique/médical précis regroupant les grands syndromes retrouvés et le terrain/contexte d'hospitalisation.
+   - Contrairement à l'HDM, rédige un Résumé syndromique court, rigoureux et en langage sémiologique/médical précis regroupant les grands syndromes retrouvés et le terrain/contexte d'hospitalisation. modèle :Il s'agit d'un(e) homme/femme de __ ans entré(e) pour ... le ... Actuellement à J... d'hospitalisation, il/elle présente un [résumé syndromique] chez un(e) patient(e) ayant comme antécédents [antécédents dans l'ordre : médicaux, chirurgicaux, psychiatriques, toxiques, autres, familiaux], nous évoque les hypothèses diagnostiques suivantes :/
 4. CHAMPS MANQUANTS : Si une information du squelette n'est pas présente dans les données brutes, laisse "[À renseigner]" sans inventer de faits cliniques.
-5. SORTIE PROPRE : Aucune phrase d'introduction, aucun commentaire, aucune balise markdown \`\`\`.`,
+5. SORTIE PROPRE : Aucune phrase d'introduction, aucun commentaire, aucune balise markdown \`\`\`.
+6.REDACTION DES EXAMEN PHYSIQUE : redige les examens physique appareil par pareil en metant des puces pour chaque informations et tout les signe negatif '
+
 
         buildUserPrompt: (formData, filledSkeleton) => {
           const formattedExamples = AI_FEW_SHOT_EXAMPLES.map((ex, idx) =>
